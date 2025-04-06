@@ -88,7 +88,8 @@ const Index = () => {
       // Process sponsor logos if any
       const processedSponsorLogos = await Promise.all(
         sponsorLogos.map(async (sponsor: SponsorLogo) => {
-          if (sponsor.logoUrl) {
+          if (sponsor.logoUrl && !sponsor.logoUrl.startsWith('http')) {
+            // Only upload if it's not already a URL (fix for the error)
             const logoUrl = await uploadSponsorLogo(sponsor.logoUrl, user.id);
             return { ...sponsor, logoUrl };
           }
@@ -122,10 +123,6 @@ const Index = () => {
   
   const handleQuantityChange = (newQuantity: number) => {
     setKitDesign(prev => ({ ...prev, quantity: newQuantity }));
-  };
-  
-  const handlePriceChange = (price: number) => {
-    setKitPrice(price);
   };
   
   return (
@@ -165,7 +162,6 @@ const Index = () => {
               hasTeamLogo={!!kitDesign.teamLogoUrl}
               sponsorCount={sponsorLogos.length || 0}
               onQuantityChange={handleQuantityChange}
-              onPriceChange={handlePriceChange}
             />
             
             <Button 
@@ -200,7 +196,7 @@ const Index = () => {
         </div>
       </footer>
 
-      <style jsx>{`
+      <style>{`
         .designer-grid {
           display: grid;
           gap: 2rem;

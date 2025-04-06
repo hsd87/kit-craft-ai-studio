@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { calculatePrice, PricingOptions } from '@/lib/pricingLogic';
 
-interface PricingCalculatorProps {
+export interface PricingCalculatorProps {
   collarStyle: string;
   designStyle: string;
   fabricType: string;
@@ -13,6 +13,7 @@ interface PricingCalculatorProps {
   hasTeamLogo: boolean;
   sponsorCount: number;
   onQuantityChange: (quantity: number) => void;
+  onPriceChange?: (price: number) => void;
 }
 
 export function PricingCalculator({
@@ -23,7 +24,8 @@ export function PricingCalculator({
   sleevePattern,
   hasTeamLogo,
   sponsorCount,
-  onQuantityChange
+  onQuantityChange,
+  onPriceChange
 }: PricingCalculatorProps) {
   const [quantity, setQuantity] = useState(10);
   const [playerDetails, setPlayerDetails] = useState({
@@ -50,6 +52,10 @@ export function PricingCalculator({
     
     const price = calculatePrice(options);
     setPricing(price);
+    
+    if (onPriceChange) {
+      onPriceChange(price.total);
+    }
   }, [
     quantity,
     collarStyle,
@@ -59,7 +65,8 @@ export function PricingCalculator({
     sleevePattern,
     hasTeamLogo,
     playerDetails,
-    sponsorCount
+    sponsorCount,
+    onPriceChange
   ]);
   
   const handleQuantityChange = (value: number[]) => {
