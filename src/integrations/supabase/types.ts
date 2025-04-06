@@ -9,7 +9,195 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      kit_designs: {
+        Row: {
+          back_image_url: string | null
+          club_name: string
+          collar_style: string
+          created_at: string
+          custom_pattern: string | null
+          delivery_region: string | null
+          design_style: string
+          express_prod: boolean
+          fabric_type: string
+          fourth_color: string | null
+          front_image_url: string | null
+          id: string
+          kit_type: string[]
+          making_type: string
+          primary_color: string
+          quantity: number
+          region: string | null
+          secondary_color: string
+          sleeve_pattern: string
+          team_logo_url: string | null
+          third_color: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          back_image_url?: string | null
+          club_name: string
+          collar_style: string
+          created_at?: string
+          custom_pattern?: string | null
+          delivery_region?: string | null
+          design_style: string
+          express_prod?: boolean
+          fabric_type: string
+          fourth_color?: string | null
+          front_image_url?: string | null
+          id?: string
+          kit_type: string[]
+          making_type: string
+          primary_color: string
+          quantity?: number
+          region?: string | null
+          secondary_color: string
+          sleeve_pattern: string
+          team_logo_url?: string | null
+          third_color?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          back_image_url?: string | null
+          club_name?: string
+          collar_style?: string
+          created_at?: string
+          custom_pattern?: string | null
+          delivery_region?: string | null
+          design_style?: string
+          express_prod?: boolean
+          fabric_type?: string
+          fourth_color?: string | null
+          front_image_url?: string | null
+          id?: string
+          kit_type?: string[]
+          making_type?: string
+          primary_color?: string
+          quantity?: number
+          region?: string | null
+          secondary_color?: string
+          sleeve_pattern?: string
+          team_logo_url?: string | null
+          third_color?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          created_at: string
+          id: string
+          kit_design_id: string | null
+          payment_id: string | null
+          shipping_address: Json | null
+          status: string
+          total_price: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kit_design_id?: string | null
+          payment_id?: string | null
+          shipping_address?: Json | null
+          status?: string
+          total_price: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kit_design_id?: string | null
+          payment_id?: string | null
+          shipping_address?: Json | null
+          status?: string
+          total_price?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_kit_design_id_fkey"
+            columns: ["kit_design_id"]
+            isOneToOne: false
+            referencedRelation: "kit_designs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_details: {
+        Row: {
+          created_at: string
+          id: string
+          kit_design_id: string | null
+          player_name: string
+          player_number: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kit_design_id?: string | null
+          player_name: string
+          player_number: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kit_design_id?: string | null
+          player_name?: string
+          player_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_details_kit_design_id_fkey"
+            columns: ["kit_design_id"]
+            isOneToOne: false
+            referencedRelation: "kit_designs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sponsor_logos: {
+        Row: {
+          created_at: string
+          id: string
+          kit_design_id: string | null
+          logo_url: string
+          placement: string
+          sponsor_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kit_design_id?: string | null
+          logo_url: string
+          placement: string
+          sponsor_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kit_design_id?: string | null
+          logo_url?: string
+          placement?: string
+          sponsor_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsor_logos_kit_design_id_fkey"
+            columns: ["kit_design_id"]
+            isOneToOne: false
+            referencedRelation: "kit_designs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

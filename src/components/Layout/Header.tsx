@@ -1,39 +1,35 @@
 
-import { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { AuthModal } from '../Auth/AuthModal';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
 
 export function Header() {
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { user, signOut } = useAuth();
   
   return (
-    <header className="w-full bg-white border-b border-gray-200 shadow-sm py-4">
-      <div className="container flex items-center justify-between">
-        <div className="flex items-center">
-          <h1 className="text-2xl font-display font-bold text-primary">
-            Profount<span className="text-secondary">.AI</span>
-          </h1>
-          <span className="ml-2 px-2 py-1 bg-secondary/10 text-secondary text-xs rounded-md">
-            Beta
-          </span>
-        </div>
+    <header className="w-full border-b">
+      <div className="container flex h-16 items-center justify-between">
+        <Link to="/" className="flex items-center">
+          <span className="text-xl font-bold">Profount.AI</span>
+        </Link>
         
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            onClick={() => setShowAuthModal(true)}
-            className="font-medium"
-          >
-            Sign In
-          </Button>
-          
-          <Button onClick={() => setShowAuthModal(true)} className="font-medium">
-            Sign Up
-          </Button>
-        </div>
+        <nav className="flex items-center gap-4">
+          {user ? (
+            <>
+              <span className="text-sm text-muted-foreground">
+                {user.email}
+              </span>
+              <Button variant="outline" size="sm" onClick={signOut}>
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/auth">Sign In</Link>
+            </Button>
+          )}
+        </nav>
       </div>
-      
-      <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} />
     </header>
   );
 }

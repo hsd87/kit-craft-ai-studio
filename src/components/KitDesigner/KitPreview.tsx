@@ -2,12 +2,16 @@
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { generateKitImage } from '@/lib/aiService';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Download } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
+import { storeGeneratedImage } from '@/services/storageService';
 
 interface KitPreviewProps {
   kitDesign: {
+    id?: string;
     primaryColor: string;
     secondaryColor: string;
     thirdColor: string;
@@ -35,29 +39,75 @@ export function KitPreview({ kitDesign, isGenerating, onGenerateRequest }: KitPr
     back: false
   });
   
-  // This would be connected to actual AI generation in real app
-  const generateImages = async () => {
-    // Set loading states
-    setLoading({ front: true, back: true });
-    
+  const { user } = useAuth();
+  
+  // Generate kit design
+  const generateKitImage = async (view: 'front' | 'back') => {
     try {
-      // In a real implementation, these would be API calls to OpenAI or similar
-      const frontImage = await generateKitImage(kitDesign, 'front');
+      setLoading(prev => ({ ...prev, [view]: true }));
       
-      // Update front image and mark as not loading
-      setImages(prev => ({ ...prev, front: frontImage }));
-      setLoading(prev => ({ ...prev, front: false }));
+      // Call our edge function
+      const { data, error } = await supabase.functions.invoke('generate-kit', {
+        body: {
+          designParams: kitDesign,
+          view
+        }
+      });
       
-      // Generate back image with a slight delay
-      setTimeout(async () => {
-        const backImage = await generateKitImage(kitDesign, 'back');
-        setImages(prev => ({ ...prev, back: backImage }));
-        setLoading(prev => ({ ...prev, back: false }));
-      }, 500);
+      if (error) throw error;
+      
+      // Store the resulting image URL
+      setImages(prev => ({ ...prev, [view]: data.imageUrl }));
+      
+      // If we have a kit ID, store the generated image in Supabase storage
+      if (kitDesign.id && data.imageUrl) {
+        try {
+          const storedUrl = await storeGeneratedImage(data.imageUrl, kitDesign.id, view);
+          
+          // Now update the kit_designs table with the new image URL
+          const updateField = view === 'front' ? 'front_image_url' : 'back_image_url';
+          
+          await supabase
+            .from('kit_designs')
+            .update({ [updateField]: storedUrl })
+            .eq('id', kitDesign.id);
+            
+        } catch (storageError) {
+          console.error('Failed to store generated image:', storageError);
+        }
+      }
+      
+      return data.imageUrl;
     } catch (error) {
-      console.error('Error generating images:', error);
-      setLoading({ front: false, back: false });
+      console.error('Error generating kit image:', error);
+      toast.error(`Failed to generate ${view} view`);
+      return null;
+    } finally {
+      setLoading(prev => ({ ...prev, [view]: false }));
     }
+  };
+  
+  // Generate both views when requested
+  const generateBothViews = async () => {
+    onGenerateRequest(); // Notify parent component
+    
+    // Generate front view first
+    await generateKitImage('front');
+    
+    // Then generate back view with a slight delay
+    setTimeout(async () => {
+      await generateKitImage('back');
+    }, 500);
+  };
+  
+  // Handle downloading the image
+  const handleDownload = (imageUrl: string, view: string) => {
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = `${kitDesign.clubName}-kit-${view}-view.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
   
   // In real app, this would trigger when design parameters change significantly
@@ -77,7 +127,7 @@ export function KitPreview({ kitDesign, isGenerating, onGenerateRequest }: KitPr
         <Button 
           variant="outline"
           size="sm"
-          onClick={onGenerateRequest}
+          onClick={generateBothViews}
           disabled={isGenerating}
         >
           {isGenerating ? 'Generating...' : 'Generate Design'}
@@ -111,6 +161,7 @@ export function KitPreview({ kitDesign, isGenerating, onGenerateRequest }: KitPr
                   size="sm" 
                   variant="secondary"
                   className="absolute bottom-4 right-4"
+                  onClick={() => images.front && handleDownload(images.front, 'front')}
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Download
@@ -140,6 +191,7 @@ export function KitPreview({ kitDesign, isGenerating, onGenerateRequest }: KitPr
                   size="sm" 
                   variant="secondary"
                   className="absolute bottom-4 right-4"
+                  onClick={() => images.back && handleDownload(images.back, 'back')}
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Download
