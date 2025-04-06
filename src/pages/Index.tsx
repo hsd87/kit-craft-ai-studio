@@ -10,18 +10,39 @@ import { toast } from 'sonner';
 
 const Index = () => {
   const [kitDesign, setKitDesign] = useState({
+    // User & Team Information
+    clubName: 'Your Club',
+    region: '',
+    
+    // Colors
     primaryColor: '#0A2463',
     secondaryColor: '#3E92CC',
     thirdColor: '#FFFFFF',
     fourthColor: '#1A1A1A',
-    region: '',
-    clubName: 'Your Club',
+    
+    // Design & Style
     collarStyle: 'v-neck',
     designStyle: 'geometric',
+    sleevePattern: 'normal',
+    customPattern: '',
     fabricType: 'dry-fit-polyester',
     makingType: 'sublimation',
-    sleevePattern: 'normal',
+    
+    // Logos
+    teamLogoUrl: '',
+    
+    // Order & Pricing
+    kitType: ['jersey-only'],
+    quantity: 10,
+    expressProd: false,
+    deliveryRegion: '',
   });
+  
+  // This would contain the sponsor logos
+  const [sponsorLogos, setSponsorLogos] = useState([]);
+  
+  // This would contain the players
+  const [players, setPlayers] = useState([]);
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [quantity, setQuantity] = useState(10);
@@ -81,8 +102,8 @@ const Index = () => {
               fabricType={kitDesign.fabricType}
               makingType={kitDesign.makingType}
               sleevePattern={kitDesign.sleevePattern}
-              hasTeamLogo={true}
-              sponsorCount={0}
+              hasTeamLogo={!!kitDesign.teamLogoUrl}
+              sponsorCount={sponsorLogos.length || 0}
               onQuantityChange={setQuantity}
             />
             
