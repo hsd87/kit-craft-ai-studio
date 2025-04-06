@@ -10,12 +10,12 @@ import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { saveKitDesign } from '@/services/kitService';
 import { uploadTeamLogo, uploadSponsorLogo } from '@/services/storageService';
-import { v4 as uuidv4 } from 'uuid';
+import { KitDesign, PlayerInfo, SponsorLogo } from '@/components/KitDesigner/types';
 
 const Index = () => {
   const { user } = useAuth();
   
-  const [kitDesign, setKitDesign] = useState({
+  const [kitDesign, setKitDesign] = useState<KitDesign>({
     // User & Team Information
     clubName: 'Your Club',
     region: '',
@@ -45,16 +45,16 @@ const Index = () => {
   });
   
   // This would contain the sponsor logos
-  const [sponsorLogos, setSponsorLogos] = useState([]);
+  const [sponsorLogos, setSponsorLogos] = useState<SponsorLogo[]>([]);
   
   // This would contain the players
-  const [players, setPlayers] = useState([]);
+  const [players, setPlayers] = useState<PlayerInfo[]>([]);
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [kitPrice, setKitPrice] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   
-  const handleDesignChange = (newDesign: any) => {
+  const handleDesignChange = (newDesign: KitDesign) => {
     setKitDesign({...kitDesign, ...newDesign});
   };
   
@@ -87,9 +87,9 @@ const Index = () => {
       
       // Process sponsor logos if any
       const processedSponsorLogos = await Promise.all(
-        sponsorLogos.map(async (sponsor: any) => {
-          if (sponsor.logoFile) {
-            const logoUrl = await uploadSponsorLogo(sponsor.logoFile, user.id);
+        sponsorLogos.map(async (sponsor: SponsorLogo) => {
+          if (sponsor.logoUrl) {
+            const logoUrl = await uploadSponsorLogo(sponsor.logoUrl, user.id);
             return { ...sponsor, logoUrl };
           }
           return sponsor;
@@ -112,11 +112,11 @@ const Index = () => {
     }
   };
   
-  const handleSponsorLogosChange = (newSponsorLogos: any) => {
+  const handleSponsorLogosChange = (newSponsorLogos: SponsorLogo[]) => {
     setSponsorLogos(newSponsorLogos);
   };
   
-  const handlePlayersChange = (newPlayers: any) => {
+  const handlePlayersChange = (newPlayers: PlayerInfo[]) => {
     setPlayers(newPlayers);
   };
   
@@ -199,6 +199,20 @@ const Index = () => {
           </p>
         </div>
       </footer>
+
+      <style jsx>{`
+        .designer-grid {
+          display: grid;
+          gap: 2rem;
+          grid-template-columns: 1fr;
+        }
+        
+        @media (min-width: 1024px) {
+          .designer-grid {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+      `}</style>
     </div>
   );
 };

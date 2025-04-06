@@ -18,27 +18,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { ColorPicker } from './ColorPicker';
 import { toast } from 'sonner';
 import { PlusCircle, Trash, Upload } from 'lucide-react';
+import { SizeChart } from './SizeChart';
+import { KitSize, PlayerInfo, SponsorLogo, DesignerFormProps, KitDesign } from './types';
 
-interface SponsorLogo {
-  id: string;
-  name: string;
-  logoUrl?: string;
-  placement: string;
-}
-
-interface PlayerInfo {
-  id: string;
-  name: string;
-  number: string;
-}
-
-interface DesignerFormProps {
-  onDesignChange: (design: any) => void;
-  onGenerateRequest: () => void;
-}
-
-export function DesignerForm({ onDesignChange, onGenerateRequest }: DesignerFormProps) {
-  const [design, setDesign] = useState({
+export function DesignerForm({ onDesignChange, onGenerateRequest, onSponsorLogosChange, onPlayersChange }: DesignerFormProps) {
+  const [design, setDesign] = useState<KitDesign>({
     // User & Team Information
     clubName: '',
     region: '',
@@ -81,14 +65,19 @@ export function DesignerForm({ onDesignChange, onGenerateRequest }: DesignerForm
     'Australia/Oceania', 
     'Middle East'
   ];
+
+  const availableSizes: KitSize[] = [
+    'XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 
+    'Youth S', 'Youth M', 'Youth L'
+  ];
   
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: keyof KitDesign, value: any) => {
     const newDesign = { ...design, [field]: value };
     setDesign(newDesign);
     onDesignChange(newDesign);
   };
   
-  const handleColorChange = (colorType: string, color: string) => {
+  const handleColorChange = (colorType: keyof KitDesign, color: string) => {
     handleChange(colorType, color);
   };
   
@@ -125,13 +114,16 @@ export function DesignerForm({ onDesignChange, onGenerateRequest }: DesignerForm
       // and get the URL. This is a mock implementation.
       const mockUrl = URL.createObjectURL(file);
       
-      setSponsorLogos(prevLogos => 
-        prevLogos.map(logo => 
-          logo.id === sponsorId 
-            ? { ...logo, logoUrl: mockUrl } 
-            : logo
-        )
+      const updatedLogos = sponsorLogos.map(logo => 
+        logo.id === sponsorId 
+          ? { ...logo, logoUrl: mockUrl } 
+          : logo
       );
+      
+      setSponsorLogos(updatedLogos);
+      if (onSponsorLogosChange) {
+        onSponsorLogosChange(updatedLogos);
+      }
       
       toast.success('Sponsor logo uploaded successfully');
     }
@@ -149,37 +141,62 @@ export function DesignerForm({ onDesignChange, onGenerateRequest }: DesignerForm
       placement: 'front-center'
     };
     
-    setSponsorLogos([...sponsorLogos, newSponsor]);
+    const updatedLogos = [...sponsorLogos, newSponsor];
+    setSponsorLogos(updatedLogos);
+    if (onSponsorLogosChange) {
+      onSponsorLogosChange(updatedLogos);
+    }
   };
   
   const removeSponsorLogo = (id: string) => {
-    setSponsorLogos(sponsorLogos.filter(logo => logo.id !== id));
+    const updatedLogos = sponsorLogos.filter(logo => logo.id !== id);
+    setSponsorLogos(updatedLogos);
+    if (onSponsorLogosChange) {
+      onSponsorLogosChange(updatedLogos);
+    }
   };
   
   const updateSponsorLogo = (id: string, field: keyof SponsorLogo, value: string) => {
-    setSponsorLogos(sponsorLogos.map(logo => 
+    const updatedLogos = sponsorLogos.map(logo => 
       logo.id === id ? { ...logo, [field]: value } : logo
-    ));
+    );
+    setSponsorLogos(updatedLogos);
+    if (onSponsorLogosChange) {
+      onSponsorLogosChange(updatedLogos);
+    }
   };
   
   const addPlayer = () => {
     const newPlayer: PlayerInfo = {
       id: `player-${Date.now()}`,
       name: '',
-      number: ''
+      number: '',
+      size: 'M'
     };
     
-    setPlayers([...players, newPlayer]);
+    const updatedPlayers = [...players, newPlayer];
+    setPlayers(updatedPlayers);
+    if (onPlayersChange) {
+      onPlayersChange(updatedPlayers);
+    }
   };
   
   const removePlayer = (id: string) => {
-    setPlayers(players.filter(player => player.id !== id));
+    const updatedPlayers = players.filter(player => player.id !== id);
+    setPlayers(updatedPlayers);
+    if (onPlayersChange) {
+      onPlayersChange(updatedPlayers);
+    }
   };
   
   const updatePlayer = (id: string, field: keyof PlayerInfo, value: string) => {
-    setPlayers(players.map(player => 
+    const updatedPlayers = players.map(player => 
       player.id === id ? { ...player, [field]: value } : player
-    ));
+    );
+    setPlayers(updatedPlayers);
+    if (onPlayersChange) {
+      onPlayersChange(updatedPlayers);
+    }
   };
   
   const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -199,11 +216,15 @@ export function DesignerForm({ onDesignChange, onGenerateRequest }: DesignerForm
             return {
               id: `player-csv-${index}`,
               name: name || '',
-              number: number || ''
+              number: number || '',
+              size: 'M' as KitSize
             };
           });
         
         setPlayers(newPlayers);
+        if (onPlayersChange) {
+          onPlayersChange(newPlayers);
+        }
         toast.success(`Imported ${newPlayers.length} players`);
       } catch (error) {
         toast.error('Error parsing CSV file. Please check the format.');
@@ -515,22 +536,26 @@ export function DesignerForm({ onDesignChange, onGenerateRequest }: DesignerForm
           </AccordionTrigger>
           <AccordionContent className="p-4">
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Entry Method</Label>
-                <RadioGroup 
-                  value={playerEntryMethod} 
-                  onValueChange={setPlayerEntryMethod}
-                  className="flex space-x-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="manual" id="entry-manual" />
-                    <Label htmlFor="entry-manual">Manual Entry</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="csv" id="entry-csv" />
-                    <Label htmlFor="entry-csv">CSV Upload</Label>
-                  </div>
-                </RadioGroup>
+              <div className="flex justify-between items-center">
+                <div className="space-y-2">
+                  <Label>Entry Method</Label>
+                  <RadioGroup 
+                    value={playerEntryMethod} 
+                    onValueChange={setPlayerEntryMethod}
+                    className="flex space-x-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="manual" id="entry-manual" />
+                      <Label htmlFor="entry-manual">Manual Entry</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="csv" id="entry-csv" />
+                      <Label htmlFor="entry-csv">CSV Upload</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                
+                <SizeChart />
               </div>
               
               {playerEntryMethod === 'csv' ? (
@@ -544,6 +569,9 @@ export function DesignerForm({ onDesignChange, onGenerateRequest }: DesignerForm
                   />
                   <p className="text-xs text-muted-foreground">
                     CSV format: Name,Number (one player per line)
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    You'll be able to set sizes after import.
                   </p>
                 </div>
               ) : (
@@ -559,7 +587,7 @@ export function DesignerForm({ onDesignChange, onGenerateRequest }: DesignerForm
                           placeholder="Player Name"
                         />
                       </div>
-                      <div className="w-24">
+                      <div className="w-20">
                         <Label htmlFor={`player-number-${player.id}`} className="text-xs">Number</Label>
                         <Input
                           id={`player-number-${player.id}`}
@@ -567,6 +595,24 @@ export function DesignerForm({ onDesignChange, onGenerateRequest }: DesignerForm
                           onChange={(e) => updatePlayer(player.id, 'number', e.target.value)}
                           placeholder="#"
                         />
+                      </div>
+                      <div className="w-24">
+                        <Label htmlFor={`player-size-${player.id}`} className="text-xs">Size</Label>
+                        <Select 
+                          value={player.size || 'M'}
+                          onValueChange={(value) => updatePlayer(player.id, 'size', value)}
+                        >
+                          <SelectTrigger id={`player-size-${player.id}`} className="h-10">
+                            <SelectValue placeholder="Size" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableSizes.map((size) => (
+                              <SelectItem key={size} value={size}>
+                                {size}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <Button
                         type="button"
@@ -599,7 +645,12 @@ export function DesignerForm({ onDesignChange, onGenerateRequest }: DesignerForm
                     {players.map((player) => (
                       <div key={player.id} className="flex justify-between py-1 border-b last:border-0">
                         <span>{player.name}</span>
-                        <span className="font-semibold">#{player.number}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm text-muted-foreground">
+                            Size: {player.size || 'M'}
+                          </span>
+                          <span className="font-semibold">#{player.number}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
