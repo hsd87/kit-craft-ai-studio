@@ -34,6 +34,11 @@ export interface KitDesign {
   deliveryRegion: string;
   frontImageUrl?: string;
   backImageUrl?: string;
+  frontCanvasJson?: string;
+  backCanvasJson?: string;
+  includeShorts?: boolean;
+  includeSocks?: boolean;
+  aiEnhanced?: boolean;
 }
 
 export interface DesignerFormProps {

@@ -11,13 +11,50 @@ export interface PricingOptions {
   playerNumbers: boolean;
   hasTeamLogo: boolean;
   sponsorCount: number;
+  includeShorts: boolean;
+  includeSocks: boolean;
+  aiEnhanced: boolean;
 }
 
 export const calculatePrice = (options: PricingOptions): {total: number; unitPrice: number} => {
-  // Base price for a single kit
-  const basePrice = options.basePrice || 45;
+  // Base pricing
+  const base = {
+    jersey: 30,
+    shorts: 15,
+    socks: 8,
+    logo: 5, // per logo
+    ai: 5,
+    nameAndNumber: 2,
+  };
   
-  // Additional costs for different options
+  // Start with jersey price
+  let additions = 0;
+  
+  // Add shorts and socks if included
+  if (options.includeShorts) {
+    additions += base.shorts;
+  }
+  
+  if (options.includeSocks) {
+    additions += base.socks;
+  }
+  
+  // Add player names and numbers cost
+  const nameAndNumber = options.playerNames || options.playerNumbers;
+  if (nameAndNumber) {
+    additions += base.nameAndNumber;
+  }
+  
+  // Add logo costs
+  additions += options.hasTeamLogo ? base.logo : 0;
+  additions += options.sponsorCount * base.logo;
+  
+  // Add AI enhancement cost
+  if (options.aiEnhanced) {
+    additions += base.ai;
+  }
+  
+  // Additional style costs from existing pricing
   const collarPrices: Record<string, number> = {
     'v-neck': 0,
     'crew-neck': 0,
@@ -41,9 +78,6 @@ export const calculatePrice = (options: PricingOptions): {total: number; unitPri
     'unique': 5
   };
   
-  // Calculate additions
-  let additions = 0;
-  
   // Add collar style price
   additions += collarPrices[options.collarStyle] || 0;
   
@@ -56,27 +90,15 @@ export const calculatePrice = (options: PricingOptions): {total: number; unitPri
   // Add sleeve pattern price
   additions += sleevePrices[options.sleevePattern] || 0;
   
-  // Add player names and numbers cost
-  if (options.playerNames) additions += 5;
-  if (options.playerNumbers) additions += 3;
-  
-  // Add logo costs
-  if (options.hasTeamLogo) additions += 5;
-  
-  // Add sponsor logo costs
-  additions += options.sponsorCount * 3;
-  
-  // Calculate unit price before quantity discount
-  const unitPrice = basePrice + additions;
+  // Calculate unit price
+  const unitPrice = base.jersey + additions;
   
   // Apply bulk discounts
   let discountedUnitPrice = unitPrice;
   if (options.quantity >= 20) {
     discountedUnitPrice = unitPrice * 0.85; // 15% discount
-  } else if (options.quantity >= 15) {
-    discountedUnitPrice = unitPrice * 0.90; // 10% discount
   } else if (options.quantity >= 10) {
-    discountedUnitPrice = unitPrice * 0.95; // 5% discount
+    discountedUnitPrice = unitPrice * 0.90; // 10% discount
   }
   
   // Calculate total price

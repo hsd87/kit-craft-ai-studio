@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/Layout/Header';
 import { DesignerForm } from '@/components/KitDesigner/DesignerForm';
@@ -42,6 +41,15 @@ const Index = () => {
     quantity: 10,
     expressProd: false,
     deliveryRegion: '',
+    
+    // Canvas state
+    frontCanvasJson: '',
+    backCanvasJson: '',
+    
+    // Kit options
+    includeShorts: false,
+    includeSocks: false,
+    aiEnhanced: true
   });
   
   // This would contain the sponsor logos
@@ -64,8 +72,27 @@ const Index = () => {
     // Simulate AI generation time
     setTimeout(() => {
       setIsGenerating(false);
+      
+      // For demo purposes, set placeholder image URLs
+      const frontImageUrl = '/placeholder-front.png';
+      const backImageUrl = '/placeholder-back.png';
+      
+      setKitDesign(prev => ({
+        ...prev,
+        frontImageUrl,
+        backImageUrl
+      }));
+      
       toast.success('Your kit design has been generated!');
     }, 2500);
+  };
+  
+  const handleSaveCanvas = (canvasJson: string, view: 'front' | 'back') => {
+    if (view === 'front') {
+      setKitDesign(prev => ({...prev, frontCanvasJson: canvasJson}));
+    } else {
+      setKitDesign(prev => ({...prev, backCanvasJson: canvasJson}));
+    }
   };
   
   const handleOrderNow = async () => {
@@ -88,10 +115,13 @@ const Index = () => {
       // Process sponsor logos if any
       const processedSponsorLogos = await Promise.all(
         sponsorLogos.map(async (sponsor: SponsorLogo) => {
-          if (sponsor.logoUrl && !sponsor.logoUrl.startsWith('http')) {
-            // Only upload if it's not already a URL (fix for the error)
-            const logoUrl = await uploadSponsorLogo(sponsor.logoUrl, user.id);
-            return { ...sponsor, logoUrl };
+          if (sponsor.logoUrl && typeof sponsor.logoUrl === 'string') {
+            // Only upload if it's not already a URL
+            if (!sponsor.logoUrl.startsWith('http')) {
+              // This is a mock implementation - in real app would upload the file
+              const logoUrl = sponsor.logoUrl;
+              return { ...sponsor, logoUrl };
+            }
           }
           return sponsor;
         })
@@ -99,7 +129,7 @@ const Index = () => {
       
       // Save the design
       await saveKitDesign(
-        { ...kitDesign, teamLogoUrl },
+        { ...kitDesign },
         processedSponsorLogos,
         players
       );
