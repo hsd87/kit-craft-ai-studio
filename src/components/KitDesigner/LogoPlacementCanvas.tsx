@@ -4,9 +4,10 @@ import { Canvas, Image as FabricImage, IEvent } from 'fabric';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RotateCw, Trash, Upload, Save } from 'lucide-react';
 import { SponsorLogo } from './types';
-import { Upload, Save, RotateCw, Trash } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface LogoPlacementCanvasProps {
   frontImageUrl: string;
@@ -29,13 +30,14 @@ export function LogoPlacementCanvas({
   const [backCanvas, setBackCanvas] = useState<Canvas | null>(null);
   const [activeView, setActiveView] = useState<'front' | 'back'>('front');
   const [selectedObject, setSelectedObject] = useState<any | null>(null);
+  const [userLogos, setUserLogos] = useState<{id: string, url: string, name: string}[]>([]);
 
   // Initialize canvases
   useEffect(() => {
     if (frontCanvasRef.current && !frontCanvas) {
       const canvas = new Canvas(frontCanvasRef.current, {
-        width: 400,
-        height: 500,
+        width: frontCanvasRef.current.offsetWidth,
+        height: frontCanvasRef.current.offsetHeight,
         backgroundColor: '#f8f9fa',
         selection: true,
       });
@@ -52,13 +54,25 @@ export function LogoPlacementCanvas({
         setSelectedObject(null);
       });
       
+      // Make canvas responsive
+      const resizeCanvas = () => {
+        if (!frontCanvasRef.current) return;
+        const width = frontCanvasRef.current.offsetWidth;
+        const height = frontCanvasRef.current.offsetHeight;
+        canvas.setDimensions({ width, height });
+        canvas.renderAll();
+      };
+      
+      window.addEventListener('resize', resizeCanvas);
       setFrontCanvas(canvas);
+      
+      return () => window.removeEventListener('resize', resizeCanvas);
     }
     
     if (backCanvasRef.current && !backCanvas) {
       const canvas = new Canvas(backCanvasRef.current, {
-        width: 400,
-        height: 500,
+        width: backCanvasRef.current.offsetWidth,
+        height: backCanvasRef.current.offsetHeight,
         backgroundColor: '#f8f9fa',
         selection: true,
       });
@@ -75,7 +89,19 @@ export function LogoPlacementCanvas({
         setSelectedObject(null);
       });
       
+      // Make canvas responsive
+      const resizeCanvas = () => {
+        if (!backCanvasRef.current) return;
+        const width = backCanvasRef.current.offsetWidth;
+        const height = backCanvasRef.current.offsetHeight;
+        canvas.setDimensions({ width, height });
+        canvas.renderAll();
+      };
+      
+      window.addEventListener('resize', resizeCanvas);
       setBackCanvas(canvas);
+      
+      return () => window.removeEventListener('resize', resizeCanvas);
     }
     
     return () => {
@@ -105,61 +131,32 @@ export function LogoPlacementCanvas({
     }
   }, [frontCanvas, backCanvas, frontImageUrl, backImageUrl]);
 
-  // Load team logo if available
+  // Combine sponsor logos and team logo
   useEffect(() => {
-    if (!frontCanvas || !teamLogoUrl) return;
+    const logos = [];
     
-    FabricImage.fromURL(teamLogoUrl, (img) => {
-      img.scaleToWidth(80);
-      img.set({
-        left: 50,
-        top: 100,
-        cornerSize: 7,
-        hasRotatingPoint: true,
+    // Add team logo if available
+    if (teamLogoUrl) {
+      logos.push({
+        id: 'team-logo',
+        url: teamLogoUrl,
+        name: 'Team Logo'
       });
-      frontCanvas.add(img);
-      frontCanvas.renderAll();
-    }, { crossOrigin: 'anonymous' });
-  }, [frontCanvas, teamLogoUrl]);
-
-  // Load sponsor logos if available
-  useEffect(() => {
-    if (!frontCanvas || !backCanvas) return;
+    }
     
-    // Clear existing sponsor logos
-    const frontObjects = frontCanvas.getObjects();
-    const backObjects = backCanvas.getObjects();
-    
+    // Add sponsor logos
     sponsorLogos.forEach(sponsor => {
-      if (!sponsor.logoUrl) return;
-      
-      FabricImage.fromURL(sponsor.logoUrl, (img) => {
-        img.scaleToWidth(80);
-        
-        const placementPositions = {
-          'front-center': { canvas: frontCanvas, left: 200, top: 150 },
-          'back-top': { canvas: backCanvas, left: 200, top: 80 },
-          'right-sleeve': { canvas: frontCanvas, left: 50, top: 150 },
-          'left-sleeve': { canvas: frontCanvas, left: 350, top: 150 },
-        };
-        
-        const placement = placementPositions[sponsor.placement as keyof typeof placementPositions];
-        
-        if (placement) {
-          img.set({
-            left: placement.left,
-            top: placement.top,
-            cornerSize: 7,
-            hasRotatingPoint: true,
-            data: { id: sponsor.id, type: 'sponsor' }
-          });
-          
-          placement.canvas.add(img);
-          placement.canvas.renderAll();
-        }
-      }, { crossOrigin: 'anonymous' });
+      if (sponsor.logoUrl) {
+        logos.push({
+          id: sponsor.id,
+          url: sponsor.logoUrl,
+          name: sponsor.name || `Sponsor ${logos.length + 1}`
+        });
+      }
     });
-  }, [frontCanvas, backCanvas, sponsorLogos]);
+    
+    setUserLogos(logos);
+  }, [sponsorLogos, teamLogoUrl]);
 
   const handleAddLogo = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -167,24 +164,36 @@ export function LogoPlacementCanvas({
     
     const reader = new FileReader();
     reader.onload = (e) => {
-      const canvas = activeView === 'front' ? frontCanvas : backCanvas;
-      if (!canvas) return;
+      if (!e.target?.result) return;
       
-      FabricImage.fromURL(e.target?.result as string, (img) => {
-        img.scaleToWidth(100);
-        img.set({
-          left: 100,
-          top: 100,
-          cornerSize: 7,
-          hasRotatingPoint: true,
-        });
-        canvas.add(img);
-        canvas.setActiveObject(img);
-        canvas.renderAll();
-        setSelectedObject(img);
-      });
+      const newLogo = {
+        id: `logo-${Date.now()}`,
+        url: e.target.result as string,
+        name: file.name
+      };
+      
+      setUserLogos([...userLogos, newLogo]);
     };
     reader.readAsDataURL(file);
+  };
+  
+  const addLogoToCanvas = (logoUrl: string) => {
+    const canvas = activeView === 'front' ? frontCanvas : backCanvas;
+    if (!canvas) return;
+    
+    FabricImage.fromURL(logoUrl, (img) => {
+      img.scaleToWidth(80);
+      img.set({
+        left: 100,
+        top: 100,
+        cornerSize: 7,
+        hasRotatingPoint: true,
+      });
+      canvas.add(img);
+      canvas.setActiveObject(img);
+      canvas.renderAll();
+      setSelectedObject(img);
+    });
   };
 
   const handleSaveCanvas = () => {
@@ -223,10 +232,10 @@ export function LogoPlacementCanvas({
     if (!canvas || !selectedObject) return;
     
     const positions = {
-      'center': { left: 200, top: 150 },
-      'left-chest': { left: 150, top: 100 },
-      'right-chest': { left: 250, top: 100 },
-      'back-top': { left: 200, top: 80 },
+      'center': { left: canvas.width! / 2, top: canvas.height! / 2 },
+      'left-chest': { left: canvas.width! * 0.25, top: canvas.height! * 0.25 },
+      'right-chest': { left: canvas.width! * 0.75, top: canvas.height! * 0.25 },
+      'back-top': { left: canvas.width! / 2, top: canvas.height! * 0.15 },
     };
     
     selectedObject.set({
@@ -238,75 +247,108 @@ export function LogoPlacementCanvas({
   };
 
   return (
-    <div className="space-y-4">
-      <Tabs value={activeView} onValueChange={(value) => setActiveView(value as 'front' | 'back')}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="front">Front View</TabsTrigger>
-          <TabsTrigger value="back">Back View</TabsTrigger>
-        </TabsList>
-        <TabsContent value="front" className="space-y-4">
-          <div className="border rounded-md overflow-hidden bg-white">
-            <canvas ref={frontCanvasRef} className="mx-auto" />
+    <div className="grid grid-cols-[200px_1fr] gap-4 h-full">
+      {/* Logo sidebar */}
+      <div className="bg-muted/30 rounded-lg overflow-hidden border">
+        <div className="p-3 bg-muted/50 border-b">
+          <h4 className="font-medium text-sm">Logos</h4>
+          <p className="text-xs text-muted-foreground">Drag logos to canvas</p>
+        </div>
+        <ScrollArea className="h-[calc(100%-56px)]">
+          <div className="p-3 space-y-3">
+            {userLogos.length > 0 ? (
+              userLogos.map((logo) => (
+                <div 
+                  key={logo.id} 
+                  className="p-2 bg-white rounded border flex flex-col items-center cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => addLogoToCanvas(logo.url)}
+                >
+                  <div className="w-16 h-16 flex items-center justify-center mb-1">
+                    <img src={logo.url} alt={logo.name} className="max-w-full max-h-full object-contain" />
+                  </div>
+                  <span className="text-xs font-medium truncate w-full text-center">{logo.name}</span>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-4 text-muted-foreground text-sm">
+                <p>No logos available</p>
+                <p className="text-xs mt-1">Upload logos using the button below</p>
+              </div>
+            )}
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full mt-2"
+              onClick={() => document.getElementById('logo-upload')?.click()}
+            >
+              <Upload className="mr-2 h-3 w-3" />
+              Upload Logo
+            </Button>
+            <input 
+              id="logo-upload" 
+              type="file" 
+              accept="image/*" 
+              className="hidden" 
+              onChange={handleAddLogo} 
+            />
           </div>
-        </TabsContent>
-        <TabsContent value="back" className="space-y-4">
-          <div className="border rounded-md overflow-hidden bg-white">
-            <canvas ref={backCanvasRef} className="mx-auto" />
-          </div>
-        </TabsContent>
-      </Tabs>
-      
-      <div className="flex items-center gap-2">
-        <Button variant="outline" onClick={() => document.getElementById('logo-upload')?.click()} className="flex-1">
-          <Upload className="mr-2 h-4 w-4" />
-          Upload Logo
-        </Button>
-        <input 
-          id="logo-upload" 
-          type="file" 
-          accept="image/*" 
-          className="hidden" 
-          onChange={handleAddLogo} 
-        />
-        
-        <Button variant="outline" onClick={handleSaveCanvas} className="flex-1">
-          <Save className="mr-2 h-4 w-4" />
-          Save Canvas
-        </Button>
+        </ScrollArea>
       </div>
-
-      {selectedObject && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => handleRotateSelected()}>
-              <RotateCw className="mr-2 h-4 w-4" />
-              Rotate
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => handleDeleteSelected()}>
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </Button>
+      
+      {/* Canvas area */}
+      <div className="relative h-full">
+        <div className="absolute inset-0">
+          <div className={`h-full ${activeView === 'front' ? 'block' : 'hidden'}`}>
+            <canvas ref={frontCanvasRef} className="w-full h-full" />
           </div>
+          <div className={`h-full ${activeView === 'back' ? 'block' : 'hidden'}`}>
+            <canvas ref={backCanvasRef} className="w-full h-full" />
+          </div>
+        </div>
+        
+        {/* Canvas controls */}
+        <div className="absolute bottom-4 right-4 flex gap-2">
+          <Button variant="secondary" size="sm" onClick={handleSaveCanvas}>
+            <Save className="mr-1 h-3 w-3" />
+            Save
+          </Button>
           
-          <div>
-            <Label className="mb-1 block">Snap to Position:</Label>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" size="sm" onClick={() => snapToPosition('center')}>
+          {selectedObject && (
+            <>
+              <Button variant="secondary" size="sm" onClick={handleRotateSelected}>
+                <RotateCw className="mr-1 h-3 w-3" />
+                Rotate
+              </Button>
+              <Button variant="secondary" size="sm" onClick={handleDeleteSelected}>
+                <Trash className="mr-1 h-3 w-3" />
+                Delete
+              </Button>
+            </>
+          )}
+        </div>
+        
+        {/* Snap positions */}
+        {selectedObject && (
+          <div className="absolute top-4 left-4 bg-white/80 backdrop-blur-sm p-2 rounded-md border shadow-sm">
+            <Label className="text-xs mb-1 block">Snap to:</Label>
+            <div className="flex flex-wrap gap-1">
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => snapToPosition('center')}>
                 Center
               </Button>
-              <Button variant="secondary" size="sm" onClick={() => snapToPosition('left-chest')}>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => snapToPosition('left-chest')}>
                 Left Chest
               </Button>
-              <Button variant="secondary" size="sm" onClick={() => snapToPosition('right-chest')}>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => snapToPosition('right-chest')}>
                 Right Chest
               </Button>
-              <Button variant="secondary" size="sm" onClick={() => snapToPosition('back-top')}>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => snapToPosition('back-top')}>
                 Back Top
               </Button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

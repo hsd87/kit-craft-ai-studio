@@ -8,6 +8,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { storeGeneratedImage } from '@/services/storageService';
+import { LogoPlacementCanvas } from './LogoPlacementCanvas';
+import { SponsorLogo } from './types';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface KitPreviewProps {
   kitDesign: {
@@ -26,9 +29,10 @@ interface KitPreviewProps {
   };
   isGenerating: boolean;
   onGenerateRequest: () => void;
+  sponsorLogos: SponsorLogo[];
 }
 
-export function KitPreview({ kitDesign, isGenerating, onGenerateRequest }: KitPreviewProps) {
+export function KitPreview({ kitDesign, isGenerating, onGenerateRequest, sponsorLogos }: KitPreviewProps) {
   const [activeView, setActiveView] = useState<'front' | 'back'>('front');
   const [images, setImages] = useState<{front: string | null; back: string | null}>({
     front: null,
@@ -110,6 +114,11 @@ export function KitPreview({ kitDesign, isGenerating, onGenerateRequest }: KitPr
     document.body.removeChild(link);
   };
   
+  const handleSaveCanvas = (canvasJson: string, view: 'front' | 'back') => {
+    // Save canvas state to backend or local storage
+    toast.success(`${view} view canvas saved`);
+  };
+  
   // In real app, this would trigger when design parameters change significantly
   useEffect(() => {
     // For demo purposes, we're using placeholder images
@@ -122,90 +131,73 @@ export function KitPreview({ kitDesign, isGenerating, onGenerateRequest }: KitPr
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold">Kit Preview</h3>
+        <h3 className="text-xl font-semibold">Design Preview</h3>
         
         <Button 
           variant="outline"
           size="sm"
-          onClick={generateBothViews}
-          disabled={isGenerating}
+          onClick={() => handleDownload(activeView === 'front' ? images.front! : images.back!, activeView)}
+          disabled={!(activeView === 'front' ? images.front : images.back)}
         >
-          {isGenerating ? 'Generating...' : 'Generate Design'}
+          <Download className="mr-2 h-4 w-4" />
+          Download
         </Button>
       </div>
       
-      <Tabs 
-        defaultValue={activeView} 
-        onValueChange={(val) => setActiveView(val as 'front' | 'back')}
-        className="w-full"
-      >
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="front">Front View</TabsTrigger>
-          <TabsTrigger value="back">Back View</TabsTrigger>
-        </TabsList>
-        
-        <div className="mt-6 rounded-lg overflow-hidden bg-gray-50 border aspect-[3/4] flex items-center justify-center">
-          <TabsContent value="front" className="w-full h-full">
-            {loading.front ? (
-              <div className="w-full h-full flex items-center justify-center">
-                <Skeleton className="w-full h-full" />
-              </div>
-            ) : images.front ? (
-              <div className="w-full h-full relative">
-                <img 
-                  src={images.front} 
-                  alt="Kit Front View" 
-                  className="w-full h-full object-contain"
-                />
-                <Button 
-                  size="sm" 
-                  variant="secondary"
-                  className="absolute bottom-4 right-4"
-                  onClick={() => images.front && handleDownload(images.front, 'front')}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Download
-                </Button>
-              </div>
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground">
-                <p>Your kit preview will appear here</p>
-                <p className="text-sm mt-2">Click "Generate Design" to create</p>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="back" className="w-full h-full">
-            {loading.back ? (
-              <div className="w-full h-full flex items-center justify-center">
-                <Skeleton className="w-full h-full" />
-              </div>
-            ) : images.back ? (
-              <div className="w-full h-full relative">
-                <img 
-                  src={images.back} 
-                  alt="Kit Back View" 
-                  className="w-full h-full object-contain"
-                />
-                <Button 
-                  size="sm" 
-                  variant="secondary"
-                  className="absolute bottom-4 right-4"
-                  onClick={() => images.back && handleDownload(images.back, 'back')}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Download
-                </Button>
-              </div>
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground">
-                <p>Your kit preview will appear here</p>
-                <p className="text-sm mt-2">Click "Generate Design" to create</p>
-              </div>
-            )}
-          </TabsContent>
-        </div>
-      </Tabs>
+      <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-xl p-6">
+        <AspectRatio ratio={16/9} className="overflow-hidden">
+          <Tabs 
+            defaultValue={activeView} 
+            onValueChange={(val) => setActiveView(val as 'front' | 'back')}
+            className="w-full h-full"
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="front">Front View</TabsTrigger>
+              <TabsTrigger value="back">Back View</TabsTrigger>
+            </TabsList>
+            
+            <div className="mt-4 h-[calc(100%-40px)] rounded-lg overflow-hidden">
+              {!isGenerating && (images.front || images.back) ? (
+                <>
+                  <TabsContent value="front" className="h-full m-0 p-0">
+                    <LogoPlacementCanvas 
+                      frontImageUrl={images.front || '/placeholder.svg'}
+                      backImageUrl={images.back || '/placeholder.svg'} 
+                      sponsorLogos={sponsorLogos}
+                      teamLogoUrl={kitDesign.teamLogoUrl}
+                      onSaveCanvas={handleSaveCanvas}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="back" className="h-full m-0 p-0">
+                    <LogoPlacementCanvas 
+                      frontImageUrl={images.front || '/placeholder.svg'}
+                      backImageUrl={images.back || '/placeholder.svg'} 
+                      sponsorLogos={sponsorLogos}
+                      teamLogoUrl={kitDesign.teamLogoUrl}
+                      onSaveCanvas={handleSaveCanvas}
+                    />
+                  </TabsContent>
+                </>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  {loading.front || loading.back ? (
+                    <div className="flex flex-col items-center justify-center">
+                      <Skeleton className="w-64 h-64 rounded-md" />
+                      <p className="mt-4 text-muted-foreground animate-pulse">Generating your kit design...</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-muted-foreground">
+                      <p className="text-lg">Your kit design will appear here</p>
+                      <p className="text-sm mt-2">Fill in the design form and click "Generate Design"</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </Tabs>
+        </AspectRatio>
+      </div>
     </div>
   );
 }
