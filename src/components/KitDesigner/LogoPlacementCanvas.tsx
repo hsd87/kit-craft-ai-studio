@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from 'react';
-import { Canvas, loadSVGFromURL, Image, IEvent } from 'fabric';
+import { Canvas, Image as FabricImage, IEvent } from 'fabric';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -90,7 +90,7 @@ export function LogoPlacementCanvas({
     
     // Load front image
     if (frontImageUrl) {
-      fabric.Image.fromURL(frontImageUrl, (img) => {
+      FabricImage.fromURL(frontImageUrl, (img) => {
         img.scaleToWidth(frontCanvas.width || 400);
         frontCanvas.setBackgroundImage(img, frontCanvas.renderAll.bind(frontCanvas));
       }, { crossOrigin: 'anonymous' });
@@ -98,7 +98,7 @@ export function LogoPlacementCanvas({
     
     // Load back image
     if (backImageUrl) {
-      fabric.Image.fromURL(backImageUrl, (img) => {
+      FabricImage.fromURL(backImageUrl, (img) => {
         img.scaleToWidth(backCanvas.width || 400);
         backCanvas.setBackgroundImage(img, backCanvas.renderAll.bind(backCanvas));
       }, { crossOrigin: 'anonymous' });
@@ -109,7 +109,7 @@ export function LogoPlacementCanvas({
   useEffect(() => {
     if (!frontCanvas || !teamLogoUrl) return;
     
-    fabric.Image.fromURL(teamLogoUrl, (img) => {
+    FabricImage.fromURL(teamLogoUrl, (img) => {
       img.scaleToWidth(80);
       img.set({
         left: 50,
@@ -133,7 +133,7 @@ export function LogoPlacementCanvas({
     sponsorLogos.forEach(sponsor => {
       if (!sponsor.logoUrl) return;
       
-      fabric.Image.fromURL(sponsor.logoUrl, (img) => {
+      FabricImage.fromURL(sponsor.logoUrl, (img) => {
         img.scaleToWidth(80);
         
         const placementPositions = {
@@ -170,7 +170,7 @@ export function LogoPlacementCanvas({
       const canvas = activeView === 'front' ? frontCanvas : backCanvas;
       if (!canvas) return;
       
-      fabric.Image.fromURL(e.target?.result as string, (img) => {
+      FabricImage.fromURL(e.target?.result as string, (img) => {
         img.scaleToWidth(100);
         img.set({
           left: 100,
