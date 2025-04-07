@@ -9,24 +9,11 @@ import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { storeGeneratedImage } from '@/services/storageService';
 import { LogoPlacementCanvas } from './LogoPlacementCanvas';
-import { SponsorLogo } from './types';
+import { SponsorLogo, KitDesign } from './types';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface KitPreviewProps {
-  kitDesign: {
-    id?: string;
-    primaryColor: string;
-    secondaryColor: string;
-    thirdColor: string;
-    fourthColor: string;
-    region: string;
-    clubName: string;
-    collarStyle: string;
-    designStyle: string;
-    fabricType: string;
-    makingType: string;
-    sleevePattern: string;
-  };
+  kitDesign: KitDesign;
   isGenerating: boolean;
   onGenerateRequest: () => void;
   sponsorLogos: SponsorLogo[];
