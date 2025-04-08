@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from 'react';
-import { Canvas, Image as FabricImage, IEvent } from 'fabric';
+import { fabric } from 'fabric';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -26,27 +26,27 @@ export function LogoPlacementCanvas({
 }: LogoPlacementCanvasProps) {
   const frontCanvasRef = useRef<HTMLCanvasElement>(null);
   const backCanvasRef = useRef<HTMLCanvasElement>(null);
-  const [frontCanvas, setFrontCanvas] = useState<Canvas | null>(null);
-  const [backCanvas, setBackCanvas] = useState<Canvas | null>(null);
+  const [frontCanvas, setFrontCanvas] = useState<fabric.Canvas | null>(null);
+  const [backCanvas, setBackCanvas] = useState<fabric.Canvas | null>(null);
   const [activeView, setActiveView] = useState<'front' | 'back'>('front');
-  const [selectedObject, setSelectedObject] = useState<any | null>(null);
+  const [selectedObject, setSelectedObject] = useState<fabric.Object | null>(null);
   const [userLogos, setUserLogos] = useState<{id: string, url: string, name: string}[]>([]);
 
   // Initialize canvases
   useEffect(() => {
     if (frontCanvasRef.current && !frontCanvas) {
-      const canvas = new Canvas(frontCanvasRef.current, {
+      const canvas = new fabric.Canvas(frontCanvasRef.current, {
         width: frontCanvasRef.current.offsetWidth,
         height: frontCanvasRef.current.offsetHeight,
         backgroundColor: '#f8f9fa',
         selection: true,
       });
       
-      canvas.on('selection:created', (e: IEvent) => {
+      canvas.on('selection:created', (e) => {
         setSelectedObject(canvas.getActiveObject());
       });
       
-      canvas.on('selection:updated', (e: IEvent) => {
+      canvas.on('selection:updated', (e) => {
         setSelectedObject(canvas.getActiveObject());
       });
       
@@ -70,18 +70,18 @@ export function LogoPlacementCanvas({
     }
     
     if (backCanvasRef.current && !backCanvas) {
-      const canvas = new Canvas(backCanvasRef.current, {
+      const canvas = new fabric.Canvas(backCanvasRef.current, {
         width: backCanvasRef.current.offsetWidth,
         height: backCanvasRef.current.offsetHeight,
         backgroundColor: '#f8f9fa',
         selection: true,
       });
       
-      canvas.on('selection:created', (e: IEvent) => {
+      canvas.on('selection:created', (e) => {
         setSelectedObject(canvas.getActiveObject());
       });
       
-      canvas.on('selection:updated', (e: IEvent) => {
+      canvas.on('selection:updated', (e) => {
         setSelectedObject(canvas.getActiveObject());
       });
       
@@ -116,16 +116,16 @@ export function LogoPlacementCanvas({
     
     // Load front image
     if (frontImageUrl) {
-      FabricImage.fromURL(frontImageUrl, (img) => {
-        img.scaleToWidth(frontCanvas.width || 400);
+      fabric.Image.fromURL(frontImageUrl, (img) => {
+        img.scaleToWidth(frontCanvas.getWidth() || 400);
         frontCanvas.setBackgroundImage(img, frontCanvas.renderAll.bind(frontCanvas));
       }, { crossOrigin: 'anonymous' });
     }
     
     // Load back image
     if (backImageUrl) {
-      FabricImage.fromURL(backImageUrl, (img) => {
-        img.scaleToWidth(backCanvas.width || 400);
+      fabric.Image.fromURL(backImageUrl, (img) => {
+        img.scaleToWidth(backCanvas.getWidth() || 400);
         backCanvas.setBackgroundImage(img, backCanvas.renderAll.bind(backCanvas));
       }, { crossOrigin: 'anonymous' });
     }
@@ -181,7 +181,7 @@ export function LogoPlacementCanvas({
     const canvas = activeView === 'front' ? frontCanvas : backCanvas;
     if (!canvas) return;
     
-    FabricImage.fromURL(logoUrl, (img) => {
+    fabric.Image.fromURL(logoUrl, (img) => {
       img.scaleToWidth(80);
       img.set({
         left: 100,
@@ -232,10 +232,10 @@ export function LogoPlacementCanvas({
     if (!canvas || !selectedObject) return;
     
     const positions = {
-      'center': { left: canvas.width! / 2, top: canvas.height! / 2 },
-      'left-chest': { left: canvas.width! * 0.25, top: canvas.height! * 0.25 },
-      'right-chest': { left: canvas.width! * 0.75, top: canvas.height! * 0.25 },
-      'back-top': { left: canvas.width! / 2, top: canvas.height! * 0.15 },
+      'center': { left: canvas.getWidth()! / 2, top: canvas.getHeight()! / 2 },
+      'left-chest': { left: canvas.getWidth()! * 0.25, top: canvas.getHeight()! * 0.25 },
+      'right-chest': { left: canvas.getWidth()! * 0.75, top: canvas.getHeight()! * 0.25 },
+      'back-top': { left: canvas.getWidth()! / 2, top: canvas.getHeight()! * 0.15 },
     };
     
     selectedObject.set({
