@@ -9,8 +9,6 @@ import { TeamInfoSection } from './FormSections/TeamInfoSection';
 import { ColorsSection } from './FormSections/ColorsSection';
 import { KitStyleSection } from './FormSections/KitStyleSection';
 import { SponsorsSection } from './FormSections/SponsorsSection';
-import { PlayersSection } from './FormSections/PlayersSection';
-import { OrderDetailsSection } from './FormSections/OrderDetailsSection';
 
 export function DesignerForm({ 
   onDesignChange, 
@@ -54,8 +52,6 @@ export function DesignerForm({
   });
   
   const [sponsorLogos, setSponsorLogos] = useState<SponsorLogo[]>([]);
-  const [players, setPlayers] = useState<PlayerInfo[]>([]);
-  const [playerEntryMethod, setPlayerEntryMethod] = useState('manual');
   const [expandedSections, setExpandedSections] = useState<string[]>(['team-info', 'colors', 'style']);
   const [availableCollarStyles, setAvailableCollarStyles] = useState<string[]>([]);
   const [availableSleevePatterns, setAvailableSleevePatterns] = useState<string[]>([]);
@@ -85,21 +81,6 @@ export function DesignerForm({
     onDesignChange(newDesign);
   };
   
-  const handleKitTypeChange = (type: string, checked: boolean) => {
-    const currentKitTypes = [...design.kitType];
-    if (checked) {
-      if (!currentKitTypes.includes(type)) {
-        currentKitTypes.push(type);
-      }
-    } else {
-      const index = currentKitTypes.indexOf(type);
-      if (index !== -1) {
-        currentKitTypes.splice(index, 1);
-      }
-    }
-    handleChange('kitType', currentKitTypes);
-  };
-  
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -115,13 +96,6 @@ export function DesignerForm({
     setSponsorLogos(updatedLogos);
     if (onSponsorLogosChange) {
       onSponsorLogosChange(updatedLogos);
-    }
-  };
-  
-  const handlePlayersChange = (updatedPlayers: PlayerInfo[]) => {
-    setPlayers(updatedPlayers);
-    if (onPlayersChange) {
-      onPlayersChange(updatedPlayers);
     }
   };
   
@@ -198,19 +172,6 @@ export function DesignerForm({
         <SponsorsSection 
           sponsorLogos={sponsorLogos}
           onSponsorLogosChange={handleSponsorLogosChange}
-        />
-        
-        <PlayersSection 
-          players={players}
-          playerEntryMethod={playerEntryMethod}
-          setPlayerEntryMethod={setPlayerEntryMethod}
-          onPlayersChange={handlePlayersChange}
-        />
-        
-        <OrderDetailsSection 
-          design={design}
-          onKitTypeChange={handleKitTypeChange}
-          onChange={handleChange}
         />
       </Accordion>
       

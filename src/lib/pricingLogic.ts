@@ -14,6 +14,7 @@ export interface PricingOptions {
   includeShorts: boolean;
   includeSocks: boolean;
   aiEnhanced: boolean;
+  accessories?: string[];
 }
 
 export const calculatePrice = (options: PricingOptions): {total: number; unitPrice: number} => {
@@ -89,6 +90,23 @@ export const calculatePrice = (options: PricingOptions): {total: number; unitPri
   
   // Add sleeve pattern price
   additions += sleevePrices[options.sleevePattern] || 0;
+  
+  // Add accessory costs
+  if (options.accessories && options.accessories.length > 0) {
+    const accessoryPrices: Record<string, number> = {
+      'captain_armband': 8,
+      'beanie': 12,
+      'gloves': 15,
+      'bag': 25,
+      'kneepads': 18,
+      'cap': 15,
+      'armband': 8
+    };
+    
+    options.accessories.forEach(accessory => {
+      additions += accessoryPrices[accessory] || 10;
+    });
+  }
   
   // Calculate unit price
   const unitPrice = base.jersey + additions;

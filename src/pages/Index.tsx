@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/Layout/Header';
 import { DesignerForm } from '@/components/KitDesigner/DesignerForm';
@@ -12,6 +13,9 @@ import { uploadTeamLogo, uploadSponsorLogo } from '@/services/storageService';
 import { KitDesign, PlayerInfo, SponsorLogo, SportType } from '@/components/KitDesigner/types';
 import { Separator } from '@/components/ui/separator';
 import { motion } from 'framer-motion';
+import { generateDesignPrompt, generateOrderKit } from '@/utils/sportMapping';
+import { PlayersSection } from '@/components/KitDesigner/FormSections/PlayersSection';
+import { OrderDetailsSection } from '@/components/KitDesigner/FormSections/OrderDetailsSection';
 
 const Index = () => {
   const { user } = useAuth();
@@ -69,6 +73,7 @@ const Index = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [kitPrice, setKitPrice] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [playerEntryMethod, setPlayerEntryMethod] = useState('manual');
   
   const handleDesignChange = (newDesign: KitDesign) => {
     setKitDesign({...kitDesign, ...newDesign});
@@ -76,6 +81,16 @@ const Index = () => {
   
   const handleGenerateRequest = () => {
     setIsGenerating(true);
+    
+    // Generate AI prompt using the sport mapping utility
+    const prompt = generateDesignPrompt(
+      kitDesign.sport || 'football',
+      kitDesign.clubName,
+      [kitDesign.primaryColor, kitDesign.secondaryColor, kitDesign.thirdColor],
+      kitDesign.designStyle
+    );
+    
+    console.log("Generated AI Prompt:", prompt);
     
     // Simulate AI generation time
     setTimeout(() => {
@@ -149,6 +164,14 @@ const Index = () => {
         })
       );
       
+      // Get the full kit items based on sport selection
+      const fullKitItems = generateOrderKit(
+        kitDesign.sport || 'football',
+        kitDesign.kitType
+      );
+      
+      console.log("Complete kit order:", fullKitItems);
+      
       // Save the design
       await saveKitDesign(
         { ...kitDesign },
@@ -175,6 +198,21 @@ const Index = () => {
   
   const handleQuantityChange = (newQuantity: number) => {
     setKitDesign(prev => ({ ...prev, quantity: newQuantity }));
+  };
+
+  const handleKitTypeChange = (type: string, checked: boolean) => {
+    const currentKitTypes = [...kitDesign.kitType];
+    if (checked) {
+      if (!currentKitTypes.includes(type)) {
+        currentKitTypes.push(type);
+      }
+    } else {
+      const index = currentKitTypes.indexOf(type);
+      if (index !== -1) {
+        currentKitTypes.splice(index, 1);
+      }
+    }
+    handleDesignChange({...kitDesign, kitType: currentKitTypes});
   };
   
   const MotionCard = motion(Card);
@@ -247,6 +285,27 @@ const Index = () => {
                     <h3 className="text-xl font-semibold">Complete Your Order</h3>
                   </div>
                   
+                  {/* Player Details Section moved from DesignerForm to here */}
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-semibold mb-4">Player Details</h4>
+                    <PlayersSection
+                      players={players}
+                      playerEntryMethod={playerEntryMethod}
+                      setPlayerEntryMethod={setPlayerEntryMethod}
+                      onPlayersChange={handlePlayersChange}
+                    />
+                  </div>
+                  
+                  {/* Order Details Section moved from DesignerForm to here */}
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-semibold mb-4">Order Details</h4>
+                    <OrderDetailsSection
+                      design={kitDesign}
+                      onKitTypeChange={handleKitTypeChange}
+                      onChange={handleDesignChange}
+                    />
+                  </div>
+                  
                   <PricingCalculator 
                     collarStyle={kitDesign.collarStyle}
                     designStyle={kitDesign.designStyle}
@@ -256,6 +315,7 @@ const Index = () => {
                     hasTeamLogo={!!kitDesign.teamLogoUrl}
                     sponsorCount={sponsorLogos.length || 0}
                     onQuantityChange={handleQuantityChange}
+                    sport={kitDesign.sport || 'football'}
                   />
                   
                   <Separator />

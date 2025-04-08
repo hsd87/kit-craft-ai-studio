@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { KitDesign } from '../types';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { complementingProducts } from '@/utils/sportMapping';
+import { Info } from 'lucide-react';
 
 interface KitStyleSectionProps {
   design: KitDesign;
@@ -24,6 +26,9 @@ export function KitStyleSection({
   const getReadableName = (value: string) => {
     return value.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   }
+  
+  // Get the current sport's recommended kit pieces
+  const sportKit = design.sport ? complementingProducts[design.sport] : null;
   
   return (
     <AccordionItem value="style" className="border rounded-lg">
@@ -133,6 +138,26 @@ export function KitStyleSection({
             </SelectContent>
           </Select>
         </div>
+
+        {/* Sport Kit Recommendation */}
+        {sportKit && (
+          <div className="bg-muted/50 p-3 rounded-md mt-4 text-sm">
+            <div className="flex items-start gap-2">
+              <Info className="h-4 w-4 text-primary mt-0.5" />
+              <div>
+                <p className="font-medium">Recommended kit for {design.sport}:</p>
+                <ul className="mt-1 space-y-1 text-muted-foreground">
+                  {sportKit.baseKit.map(item => (
+                    <li key={item}>• {getReadableName(item)} (Base)</li>
+                  ))}
+                  {sportKit.complement.map(item => (
+                    <li key={item}>• {getReadableName(item)} (Complement)</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Custom Pattern */}
         {design.designStyle === 'custom' && (

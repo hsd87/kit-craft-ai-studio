@@ -6,6 +6,9 @@ import { Switch } from '@/components/ui/switch';
 import { calculatePrice, PricingOptions } from '@/lib/pricingLogic';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { HelpCircle } from 'lucide-react';
+import { KitAccessoriesSection } from './FormSections/KitAccessoriesSection';
+import { Separator } from '@/components/ui/separator';
+import { SportType } from './types';
 
 export interface PricingCalculatorProps {
   collarStyle: string;
@@ -17,6 +20,7 @@ export interface PricingCalculatorProps {
   sponsorCount: number;
   onQuantityChange: (quantity: number) => void;
   onPriceChange?: (price: number) => void;
+  sport: SportType;
 }
 
 export function PricingCalculator({
@@ -28,7 +32,8 @@ export function PricingCalculator({
   hasTeamLogo,
   sponsorCount,
   onQuantityChange,
-  onPriceChange
+  onPriceChange,
+  sport
 }: PricingCalculatorProps) {
   const [quantity, setQuantity] = useState(10);
   const [playerDetails, setPlayerDetails] = useState({
@@ -41,6 +46,8 @@ export function PricingCalculator({
     includeSocks: false,
     aiEnhanced: true
   });
+
+  const [selectedAccessories, setSelectedAccessories] = useState<string[]>([]);
   
   const [pricing, setPricing] = useState({ total: 0, unitPrice: 0 });
   
@@ -59,7 +66,8 @@ export function PricingCalculator({
       sponsorCount,
       includeShorts: kitOptions.includeShorts,
       includeSocks: kitOptions.includeSocks,
-      aiEnhanced: kitOptions.aiEnhanced
+      aiEnhanced: kitOptions.aiEnhanced,
+      accessories: selectedAccessories
     };
     
     const price = calculatePrice(options);
@@ -79,6 +87,7 @@ export function PricingCalculator({
     playerDetails,
     sponsorCount,
     kitOptions,
+    selectedAccessories,
     onPriceChange
   ]);
   
@@ -86,6 +95,14 @@ export function PricingCalculator({
     const newQuantity = value[0];
     setQuantity(newQuantity);
     onQuantityChange(newQuantity);
+  };
+
+  const handleAccessoryChange = (accessory: string, isChecked: boolean) => {
+    if (isChecked) {
+      setSelectedAccessories(prev => [...prev, accessory]);
+    } else {
+      setSelectedAccessories(prev => prev.filter(item => item !== accessory));
+    }
   };
   
   return (
@@ -168,8 +185,19 @@ export function PricingCalculator({
             />
           </div>
         </div>
+
+        <Separator />
         
-        <div className="border-t pt-4">
+        {/* Accessories Section */}
+        <KitAccessoriesSection 
+          sport={sport}
+          selectedAccessories={selectedAccessories}
+          onAccessoryChange={handleAccessoryChange}
+        />
+        
+        <Separator />
+        
+        <div className="pt-2">
           <h4 className="font-medium text-sm mb-3">Pricing Breakdown</h4>
           
           <div className="space-y-1 text-sm">
@@ -217,6 +245,13 @@ export function PricingCalculator({
               <div className="flex justify-between">
                 <span>AI Enhancement:</span>
                 <span>+$5.00</span>
+              </div>
+            )}
+
+            {selectedAccessories.length > 0 && (
+              <div className="flex justify-between">
+                <span>Accessories ({selectedAccessories.length}):</span>
+                <span>+$Variable</span>
               </div>
             )}
             
