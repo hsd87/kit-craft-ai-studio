@@ -66,6 +66,7 @@ export function ColorsSection({
               sponsorLogos={sponsorLogos}
               teamLogoUrl={design.teamLogoUrl}
               onSaveCanvas={onSaveCanvas}
+              sportType={design.sport || 'football'}
             />
           ) : (
             <div className="p-6 border rounded-md bg-muted/50 text-center">
