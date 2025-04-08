@@ -1,9 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from 'sonner';
-import { KitDesign, DesignerFormProps, PlayerInfo, SponsorLogo } from './types';
+import { KitDesign, DesignerFormProps, PlayerInfo, SponsorLogo, SportType, sportTemplates } from './types';
 import { TeamInfoSection } from './FormSections/TeamInfoSection';
 import { ColorsSection } from './FormSections/ColorsSection';
 import { KitStyleSection } from './FormSections/KitStyleSection';
@@ -44,12 +45,39 @@ export function DesignerForm({
     quantity: 10,
     expressProd: false,
     deliveryRegion: '',
+
+    // Sport selection with default
+    sport: 'football',
+    
+    // Canvas data by sport
+    canvasData: {},
   });
   
   const [sponsorLogos, setSponsorLogos] = useState<SponsorLogo[]>([]);
   const [players, setPlayers] = useState<PlayerInfo[]>([]);
   const [playerEntryMethod, setPlayerEntryMethod] = useState('manual');
   const [expandedSections, setExpandedSections] = useState<string[]>(['team-info', 'colors', 'style']);
+  const [availableCollarStyles, setAvailableCollarStyles] = useState<string[]>([]);
+  const [availableSleevePatterns, setAvailableSleevePatterns] = useState<string[]>([]);
+  
+  // Set available options based on selected sport
+  useEffect(() => {
+    if (design.sport) {
+      const sportConfig = sportTemplates[design.sport];
+      
+      setAvailableCollarStyles(sportConfig.options.collarStyles);
+      setAvailableSleevePatterns(sportConfig.options.sleevePatterns);
+      
+      // If current collar style or sleeve pattern is not available for this sport, set to first available
+      if (!sportConfig.options.collarStyles.includes(design.collarStyle)) {
+        handleChange('collarStyle', sportConfig.options.collarStyles[0]);
+      }
+      
+      if (!sportConfig.options.sleevePatterns.includes(design.sleevePattern)) {
+        handleChange('sleevePattern', sportConfig.options.sleevePatterns[0]);
+      }
+    }
+  }, [design.sport]);
   
   const handleChange = (field: keyof KitDesign, value: any) => {
     const newDesign = { ...design, [field]: value };
@@ -97,6 +125,10 @@ export function DesignerForm({
     }
   };
   
+  const handleSportChange = (sport: SportType) => {
+    handleChange('sport', sport);
+  };
+  
   const handleGenerateClick = () => {
     if (!design.clubName) {
       toast.error('Please enter a club name before generating');
@@ -110,6 +142,35 @@ export function DesignerForm({
   
   return (
     <div className="space-y-6">
+      {/* Sport Selection Dropdown */}
+      <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg p-4 mb-4">
+        <label className="block text-sm font-medium mb-2" htmlFor="sport-select">
+          Select Sport
+        </label>
+        <Select 
+          value={design.sport} 
+          onValueChange={(value) => handleSportChange(value as SportType)}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a sport" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Sports</SelectLabel>
+              <SelectItem value="football">Football/Soccer</SelectItem>
+              <SelectItem value="basketball">Basketball</SelectItem>
+              <SelectItem value="cricket">Cricket</SelectItem>
+              <SelectItem value="rugby">Rugby</SelectItem>
+              <SelectItem value="volleyball">Volleyball</SelectItem>
+              <SelectItem value="baseball">Baseball</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground mt-1">
+          This will customize design options specific to your selected sport
+        </p>
+      </div>
+      
       <Accordion 
         type="multiple" 
         defaultValue={expandedSections}
@@ -130,6 +191,8 @@ export function DesignerForm({
         <KitStyleSection 
           design={design}
           onChange={handleChange}
+          availableCollarStyles={availableCollarStyles}
+          availableSleevePatterns={availableSleevePatterns}
         />
         
         <SponsorsSection 

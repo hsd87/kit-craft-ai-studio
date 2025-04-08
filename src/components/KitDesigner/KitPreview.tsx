@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { storeGeneratedImage } from '@/services/storageService';
 import { LogoPlacementCanvas } from './LogoPlacementCanvas';
-import { SponsorLogo, KitDesign } from './types';
+import { SponsorLogo, KitDesign, SportType, sportTemplates } from './types';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface KitPreviewProps {
@@ -37,10 +37,13 @@ export function KitPreview({ kitDesign, isGenerating, onGenerateRequest, sponsor
     try {
       setLoading(prev => ({ ...prev, [view]: true }));
       
-      // Call our edge function
+      // Include sport in the generation parameters
       const { data, error } = await supabase.functions.invoke('generate-kit', {
         body: {
-          designParams: kitDesign,
+          designParams: {
+            ...kitDesign,
+            sport: kitDesign.sport || 'football' // Default to football if not specified
+          },
           view
         }
       });
@@ -95,30 +98,63 @@ export function KitPreview({ kitDesign, isGenerating, onGenerateRequest, sponsor
   const handleDownload = (imageUrl: string, view: string) => {
     const link = document.createElement('a');
     link.href = imageUrl;
-    link.download = `${kitDesign.clubName}-kit-${view}-view.png`;
+    link.download = `${kitDesign.clubName}-${kitDesign.sport || 'football'}-kit-${view}-view.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
   
   const handleSaveCanvas = (canvasJson: string, view: 'front' | 'back') => {
-    // Save canvas state to backend or local storage
+    // Save canvas state by sport
+    const sport = kitDesign.sport || 'football';
+    
+    // Create or update the canvas data for this sport
+    const updatedCanvasData = { 
+      ...kitDesign.canvasData,
+      [sport]: {
+        ...(kitDesign.canvasData?.[sport] || {}),
+        [view === 'front' ? 'frontCanvasJson' : 'backCanvasJson']: canvasJson
+      }
+    };
+    
+    // Also update the main canvasJson for backward compatibility
+    const updatedDesign = {
+      ...kitDesign,
+      [view === 'front' ? 'frontCanvasJson' : 'backCanvasJson']: canvasJson,
+      canvasData: updatedCanvasData
+    };
+    
+    // Notify parent component about the changes
+    onGenerateRequest();
+    
     toast.success(`${view} view canvas saved`);
   };
   
-  // In real app, this would trigger when design parameters change significantly
+  // Get sport-specific images when sport changes
   useEffect(() => {
-    // For demo purposes, we're using placeholder images
+    const sport = kitDesign.sport || 'football';
+    const sportConfig = sportTemplates[sport];
+    
+    // In a real app, you would fetch sport-specific images
+    // For now, we'll use placeholders
     setImages({
-      front: '/placeholder.svg',
-      back: '/placeholder.svg',
+      front: kitDesign.frontImageUrl || sportConfig.imageBase,
+      back: kitDesign.backImageUrl || sportConfig.imageBase,
     });
-  }, []);
+  }, [kitDesign.sport, kitDesign.frontImageUrl, kitDesign.backImageUrl]);
   
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold">Design Preview</h3>
+        <h3 className="text-xl font-semibold">
+          {kitDesign.sport ? (
+            <>
+              {kitDesign.sport.charAt(0).toUpperCase() + kitDesign.sport.slice(1)} Kit Preview
+            </>
+          ) : (
+            'Design Preview'
+          )}
+        </h3>
         
         <Button 
           variant="outline"
@@ -153,6 +189,7 @@ export function KitPreview({ kitDesign, isGenerating, onGenerateRequest, sponsor
                       sponsorLogos={sponsorLogos}
                       teamLogoUrl={kitDesign.teamLogoUrl}
                       onSaveCanvas={handleSaveCanvas}
+                      sportType={kitDesign.sport || 'football'}
                     />
                   </TabsContent>
                   
@@ -163,6 +200,7 @@ export function KitPreview({ kitDesign, isGenerating, onGenerateRequest, sponsor
                       sponsorLogos={sponsorLogos}
                       teamLogoUrl={kitDesign.teamLogoUrl}
                       onSaveCanvas={handleSaveCanvas}
+                      sportType={kitDesign.sport || 'football'}
                     />
                   </TabsContent>
                 </>

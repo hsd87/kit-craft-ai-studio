@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/Layout/Header';
 import { DesignerForm } from '@/components/KitDesigner/DesignerForm';
@@ -10,7 +9,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { saveKitDesign } from '@/services/kitService';
 import { uploadTeamLogo, uploadSponsorLogo } from '@/services/storageService';
-import { KitDesign, PlayerInfo, SponsorLogo } from '@/components/KitDesigner/types';
+import { KitDesign, PlayerInfo, SponsorLogo, SportType } from '@/components/KitDesigner/types';
 import { Separator } from '@/components/ui/separator';
 import { motion } from 'framer-motion';
 
@@ -52,7 +51,13 @@ const Index = () => {
     // Kit options
     includeShorts: false,
     includeSocks: false,
-    aiEnhanced: true
+    aiEnhanced: true,
+    
+    // Sport selection
+    sport: 'football',
+    
+    // Canvas data by sport
+    canvasData: {},
   });
   
   // This would contain the sponsor logos
@@ -91,11 +96,25 @@ const Index = () => {
   };
   
   const handleSaveCanvas = (canvasJson: string, view: 'front' | 'back') => {
-    if (view === 'front') {
-      setKitDesign(prev => ({...prev, frontCanvasJson: canvasJson}));
-    } else {
-      setKitDesign(prev => ({...prev, backCanvasJson: canvasJson}));
-    }
+    // Save sport-specific canvas data
+    const sport = kitDesign.sport || 'football';
+    
+    // Update the specific sport canvas data
+    setKitDesign(prev => {
+      const updatedCanvasData = {
+        ...prev.canvasData,
+        [sport]: {
+          ...(prev.canvasData?.[sport] || {}),
+          [view === 'front' ? 'frontCanvasJson' : 'backCanvasJson']: canvasJson
+        }
+      };
+      
+      return {
+        ...prev, 
+        [view === 'front' ? 'frontCanvasJson' : 'backCanvasJson']: canvasJson,
+        canvasData: updatedCanvasData
+      };
+    });
   };
   
   const handleOrderNow = async () => {

@@ -1,11 +1,10 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { fabric } from 'fabric';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { RotateCw, Trash, Upload, Save } from 'lucide-react';
-import { SponsorLogo } from './types';
+import { SponsorLogo, SportType } from './types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 
@@ -14,6 +13,7 @@ interface LogoPlacementCanvasProps {
   backImageUrl: string;
   sponsorLogos: SponsorLogo[];
   teamLogoUrl?: string;
+  sportType: SportType;
   onSaveCanvas: (canvasState: string, view: 'front' | 'back') => void;
 }
 
@@ -22,6 +22,7 @@ export function LogoPlacementCanvas({
   backImageUrl,
   sponsorLogos,
   teamLogoUrl,
+  sportType,
   onSaveCanvas
 }: LogoPlacementCanvasProps) {
   const frontCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -32,7 +33,6 @@ export function LogoPlacementCanvas({
   const [selectedObject, setSelectedObject] = useState<fabric.Object | null>(null);
   const [userLogos, setUserLogos] = useState<{id: string, url: string, name: string}[]>([]);
 
-  // Initialize canvases
   useEffect(() => {
     if (frontCanvasRef.current && !frontCanvas) {
       const canvas = new fabric.Canvas(frontCanvasRef.current, {
@@ -54,7 +54,6 @@ export function LogoPlacementCanvas({
         setSelectedObject(null);
       });
       
-      // Make canvas responsive
       const resizeCanvas = () => {
         if (!frontCanvasRef.current) return;
         const width = frontCanvasRef.current.offsetWidth;
@@ -89,7 +88,6 @@ export function LogoPlacementCanvas({
         setSelectedObject(null);
       });
       
-      // Make canvas responsive
       const resizeCanvas = () => {
         if (!backCanvasRef.current) return;
         const width = backCanvasRef.current.offsetWidth;
@@ -110,11 +108,9 @@ export function LogoPlacementCanvas({
     };
   }, [frontCanvasRef, backCanvasRef]);
 
-  // Load kit images when URLs change
   useEffect(() => {
     if (!frontCanvas || !backCanvas) return;
     
-    // Load front image
     if (frontImageUrl) {
       fabric.Image.fromURL(frontImageUrl, (img) => {
         img.scaleToWidth(frontCanvas.getWidth() || 400);
@@ -122,20 +118,17 @@ export function LogoPlacementCanvas({
       }, { crossOrigin: 'anonymous' });
     }
     
-    // Load back image
     if (backImageUrl) {
       fabric.Image.fromURL(backImageUrl, (img) => {
         img.scaleToWidth(backCanvas.getWidth() || 400);
         backCanvas.setBackgroundImage(img, backCanvas.renderAll.bind(backCanvas));
       }, { crossOrigin: 'anonymous' });
     }
-  }, [frontCanvas, backCanvas, frontImageUrl, backImageUrl]);
+  }, [frontCanvas, backCanvas, frontImageUrl, backImageUrl, sportType]);
 
-  // Combine sponsor logos and team logo
   useEffect(() => {
     const logos = [];
     
-    // Add team logo if available
     if (teamLogoUrl) {
       logos.push({
         id: 'team-logo',
@@ -144,7 +137,6 @@ export function LogoPlacementCanvas({
       });
     }
     
-    // Add sponsor logos
     sponsorLogos.forEach(sponsor => {
       if (sponsor.logoUrl) {
         logos.push({
@@ -227,31 +219,66 @@ export function LogoPlacementCanvas({
     canvas?.renderAll();
   };
 
+  const getPositionsForSport = (sport: SportType) => {
+    const defaultPositions = {
+      'center': { left: 50, top: 50 },
+      'left-chest': { left: 25, top: 25 },
+      'right-chest': { left: 75, top: 25 },
+      'back-top': { left: 50, top: 15 },
+    };
+    
+    const sportPositions: Record<SportType, typeof defaultPositions> = {
+      'football': defaultPositions,
+      'basketball': {
+        'center': { left: 50, top: 40 },
+        'left-chest': { left: 25, top: 20 },
+        'right-chest': { left: 75, top: 20 },
+        'back-top': { left: 50, top: 10 },
+      },
+      'cricket': defaultPositions,
+      'rugby': {
+        'center': { left: 50, top: 30 },
+        'left-chest': { left: 20, top: 20 },
+        'right-chest': { left: 80, top: 20 },
+        'back-top': { left: 50, top: 10 },
+      },
+      'volleyball': defaultPositions,
+      'baseball': defaultPositions,
+    };
+    
+    return sportPositions[sport] || defaultPositions;
+  };
+
   const snapToPosition = (position: 'center' | 'left-chest' | 'right-chest' | 'back-top') => {
     const canvas = activeView === 'front' ? frontCanvas : backCanvas;
     if (!canvas || !selectedObject) return;
     
-    const positions = {
-      'center': { left: canvas.getWidth()! / 2, top: canvas.getHeight()! / 2 },
-      'left-chest': { left: canvas.getWidth()! * 0.25, top: canvas.getHeight()! * 0.25 },
-      'right-chest': { left: canvas.getWidth()! * 0.75, top: canvas.getHeight()! * 0.25 },
-      'back-top': { left: canvas.getWidth()! / 2, top: canvas.getHeight()! * 0.15 },
+    const positions = getPositionsForSport(sportType);
+    const canvasWidth = canvas.getWidth() || 400;
+    const canvasHeight = canvas.getHeight() || 300;
+    
+    const calculatedPosition = {
+      left: (positions[position].left / 100) * canvasWidth,
+      top: (positions[position].top / 100) * canvasHeight,
     };
     
     selectedObject.set({
-      left: positions[position].left,
-      top: positions[position].top,
+      left: calculatedPosition.left,
+      top: calculatedPosition.top,
     });
     
     canvas.renderAll();
   };
 
+  const getSportLabel = () => {
+    return sportType.charAt(0).toUpperCase() + sportType.slice(1);
+  };
+
   return (
     <div className="grid grid-cols-[200px_1fr] gap-4 h-full">
-      {/* Logo sidebar */}
       <div className="bg-muted/30 rounded-lg overflow-hidden border">
         <div className="p-3 bg-muted/50 border-b">
-          <h4 className="font-medium text-sm">Logos</h4>
+          <h4 className="font-medium text-sm">{getSportLabel()} Kit Logos</h4>
           <p className="text-xs text-muted-foreground">Drag logos to canvas</p>
         </div>
         <ScrollArea className="h-[calc(100%-56px)]">
@@ -296,7 +323,6 @@ export function LogoPlacementCanvas({
         </ScrollArea>
       </div>
       
-      {/* Canvas area */}
       <div className="relative h-full">
         <div className="absolute inset-0">
           <div className={`h-full ${activeView === 'front' ? 'block' : 'hidden'}`}>
@@ -307,7 +333,6 @@ export function LogoPlacementCanvas({
           </div>
         </div>
         
-        {/* Canvas controls */}
         <div className="absolute bottom-4 right-4 flex gap-2">
           <Button variant="secondary" size="sm" onClick={handleSaveCanvas}>
             <Save className="mr-1 h-3 w-3" />
@@ -328,7 +353,6 @@ export function LogoPlacementCanvas({
           )}
         </div>
         
-        {/* Snap positions */}
         {selectedObject && (
           <div className="absolute top-4 left-4 bg-white/80 backdrop-blur-sm p-2 rounded-md border shadow-sm">
             <Label className="text-xs mb-1 block">Snap to:</Label>

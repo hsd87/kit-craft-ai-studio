@@ -13,6 +13,8 @@ export interface SponsorLogo {
   placement: string;
 }
 
+export type SportType = 'football' | 'basketball' | 'cricket' | 'rugby' | 'volleyball' | 'baseball';
+
 export interface KitDesign {
   id?: string;
   clubName: string;
@@ -39,6 +41,13 @@ export interface KitDesign {
   includeShorts?: boolean;
   includeSocks?: boolean;
   aiEnhanced?: boolean;
+  sport?: SportType;
+  canvasData?: {
+    [sport in SportType]?: {
+      frontCanvasJson?: string;
+      backCanvasJson?: string;
+    }
+  };
 }
 
 export interface DesignerFormProps {
@@ -61,3 +70,48 @@ export interface PricingCalculatorProps {
 }
 
 export type KitSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | '3XL' | '4XL' | 'Youth S' | 'Youth M' | 'Youth L';
+
+export const sportTemplates = {
+  football: {
+    imageBase: '/placeholder.svg',
+    options: {
+      collarStyles: ['v-neck', 'crew-neck', 'collar', 'collar-without-buttons'],
+      sleevePatterns: ['normal', 'raglan', 'unique'],
+    }
+  },
+  basketball: {
+    imageBase: '/placeholder.svg',
+    options: {
+      collarStyles: ['v-neck', 'crew-neck'],
+      sleevePatterns: ['normal', 'sleeveless'],
+    }
+  },
+  cricket: {
+    imageBase: '/placeholder.svg',
+    options: {
+      collarStyles: ['collar', 'collar-without-buttons'],
+      sleevePatterns: ['normal', 'raglan'],
+    }
+  },
+  rugby: {
+    imageBase: '/placeholder.svg',
+    options: {
+      collarStyles: ['collar', 'v-neck'],
+      sleevePatterns: ['normal', 'raglan'],
+    }
+  },
+  volleyball: {
+    imageBase: '/placeholder.svg',
+    options: {
+      collarStyles: ['v-neck', 'crew-neck'],
+      sleevePatterns: ['normal', 'sleeveless', 'raglan'],
+    }
+  },
+  baseball: {
+    imageBase: '/placeholder.svg',
+    options: {
+      collarStyles: ['v-neck', 'button-up'],
+      sleevePatterns: ['raglan', 'normal'],
+    }
+  },
+};
