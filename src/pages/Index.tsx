@@ -15,6 +15,7 @@ import { motion } from 'framer-motion';
 import { generateDesignPrompt, generateOrderKit } from '@/utils/sportMapping';
 import { PlayersSection } from '@/components/KitDesigner/FormSections/PlayersSection';
 import { OrderDetailsSection } from '@/components/KitDesigner/FormSections/OrderDetailsSection';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const Index = () => {
   const { user } = useAuth();
@@ -288,26 +289,37 @@ const Index = () => {
                     <h3 className="text-xl font-semibold">Complete Your Order</h3>
                   </div>
                   
-                  {/* Player Details Section moved from DesignerForm to here */}
-                  <div className="border rounded-lg p-4">
-                    <h4 className="font-semibold mb-4">Player Details</h4>
-                    <PlayersSection
-                      players={players}
-                      playerEntryMethod={playerEntryMethod}
-                      setPlayerEntryMethod={setPlayerEntryMethod}
-                      onPlayersChange={handlePlayersChange}
-                    />
-                  </div>
-                  
-                  {/* Order Details Section moved from DesignerForm to here */}
-                  <div className="border rounded-lg p-4">
-                    <h4 className="font-semibold mb-4">Order Details</h4>
-                    <OrderDetailsSection
-                      design={kitDesign}
-                      onKitTypeChange={handleKitTypeChange}
-                      onChange={handleDesignFieldChange}
-                    />
-                  </div>
+                  {/* Wrap the sections in an Accordion */}
+                  <Accordion type="multiple" defaultValue={["players", "order-details"]} className="space-y-4">
+                    {/* Player Details Section */}
+                    <AccordionItem value="players" className="border rounded-lg overflow-hidden">
+                      <AccordionTrigger className="px-4 py-3 bg-muted/50 hover:bg-muted">
+                        <h3 className="text-lg font-medium">Player Details</h3>
+                      </AccordionTrigger>
+                      <AccordionContent className="p-4">
+                        <PlayersSection
+                          players={players}
+                          playerEntryMethod={playerEntryMethod}
+                          setPlayerEntryMethod={setPlayerEntryMethod}
+                          onPlayersChange={handlePlayersChange}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                    
+                    {/* Order Details Section */}
+                    <AccordionItem value="order-details" className="border rounded-lg overflow-hidden">
+                      <AccordionTrigger className="px-4 py-3 bg-muted/50 hover:bg-muted">
+                        <h3 className="text-lg font-medium">Order Details</h3>
+                      </AccordionTrigger>
+                      <AccordionContent className="p-4">
+                        <OrderDetailsSection
+                          design={kitDesign}
+                          onKitTypeChange={handleKitTypeChange}
+                          onChange={handleDesignFieldChange}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                   
                   <PricingCalculator 
                     collarStyle={kitDesign.collarStyle}
