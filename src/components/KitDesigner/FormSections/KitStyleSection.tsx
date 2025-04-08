@@ -1,10 +1,9 @@
 
 import React from 'react';
 import { AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
 import { KitDesign } from '../types';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 
 interface KitStyleSectionProps {
@@ -32,173 +31,131 @@ export function KitStyleSection({
       <AccordionContent className="px-4 pb-4 pt-2 space-y-4">
         {/* Collar Style */}
         <div>
-          <FormField
-            name="collarStyle"
-            render={() => (
-              <FormItem>
-                <FormLabel>Collar Style</FormLabel>
-                <FormControl>
-                  <Select 
-                    value={design.collarStyle}
-                    onValueChange={(value: string) => onChange('collarStyle', value)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select collar style" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {availableCollarStyles.map((style) => (
-                          <SelectItem key={style} value={style}>
-                            {getReadableName(style)}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-              </FormItem>
-            )}
-          />
+          <div className="space-y-2">
+            <Label>Collar Style</Label>
+            <Select 
+              value={design.collarStyle}
+              onValueChange={(value: string) => onChange('collarStyle', value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select collar style" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {availableCollarStyles.map((style) => (
+                    <SelectItem key={style} value={style}>
+                      {getReadableName(style)}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         
         {/* Design Style */}
         <div>
-          <FormField
-            name="designStyle"
-            render={() => (
-              <FormItem>
-                <FormLabel>Design Style</FormLabel>
-                <FormControl>
-                  <Select 
-                    value={design.designStyle}
-                    onValueChange={(value: string) => onChange('designStyle', value)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select design style" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="geometric">Geometric</SelectItem>
-                        <SelectItem value="stripes">Stripes</SelectItem>
-                        <SelectItem value="gradients">Gradients</SelectItem>
-                        <SelectItem value="minimalist">Minimalist</SelectItem>
-                        <SelectItem value="retro">Retro</SelectItem>
-                        <SelectItem value="custom">Custom</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-              </FormItem>
-            )}
-          />
+          <div className="space-y-2">
+            <Label>Design Style</Label>
+            <Select 
+              value={design.designStyle}
+              onValueChange={(value: string) => onChange('designStyle', value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select design style" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="geometric">Geometric</SelectItem>
+                  <SelectItem value="stripes">Stripes</SelectItem>
+                  <SelectItem value="gradients">Gradients</SelectItem>
+                  <SelectItem value="minimalist">Minimalist</SelectItem>
+                  <SelectItem value="retro">Retro</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         
         {/* Sleeve Pattern */}
         <div>
-          <FormField
-            name="sleevePattern"
-            render={() => (
-              <FormItem>
-                <FormLabel>Sleeve Pattern</FormLabel>
-                <FormControl>
-                  <Select 
-                    value={design.sleevePattern}
-                    onValueChange={(value: string) => onChange('sleevePattern', value)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select sleeve pattern" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {availableSleevePatterns.map((pattern) => (
-                          <SelectItem key={pattern} value={pattern}>
-                            {getReadableName(pattern)}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-              </FormItem>
-            )}
-          />
+          <div className="space-y-2">
+            <Label>Sleeve Pattern</Label>
+            <Select 
+              value={design.sleevePattern}
+              onValueChange={(value: string) => onChange('sleevePattern', value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select sleeve pattern" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {availableSleevePatterns.map((pattern) => (
+                    <SelectItem key={pattern} value={pattern}>
+                      {getReadableName(pattern)}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         
         {/* Fabric Type */}
         <div>
-          <FormField
-            name="fabricType"
-            render={() => (
-              <FormItem>
-                <FormLabel>Fabric Type</FormLabel>
-                <FormControl>
-                  <Select 
-                    value={design.fabricType}
-                    onValueChange={(value: string) => onChange('fabricType', value)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select fabric type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="dry-fit-polyester">Dry Fit Polyester</SelectItem>
-                        <SelectItem value="mesh-polyester">Mesh Polyester</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-              </FormItem>
-            )}
-          />
+          <div className="space-y-2">
+            <Label>Fabric Type</Label>
+            <Select 
+              value={design.fabricType}
+              onValueChange={(value: string) => onChange('fabricType', value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select fabric type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="dry-fit-polyester">Dry Fit Polyester</SelectItem>
+                  <SelectItem value="mesh-polyester">Mesh Polyester</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         
         {/* Making Type */}
         <div>
-          <FormField
-            name="makingType"
-            render={() => (
-              <FormItem>
-                <FormLabel>Making Type</FormLabel>
-                <FormControl>
-                  <Select 
-                    value={design.makingType}
-                    onValueChange={(value: string) => onChange('makingType', value)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select making type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="sublimation">Sublimation</SelectItem>
-                        <SelectItem value="cut-sew">Cut & Sew</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-              </FormItem>
-            )}
-          />
+          <div className="space-y-2">
+            <Label>Making Type</Label>
+            <Select 
+              value={design.makingType}
+              onValueChange={(value: string) => onChange('makingType', value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select making type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="sublimation">Sublimation</SelectItem>
+                  <SelectItem value="cut-sew">Cut & Sew</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         
         {/* Custom Pattern */}
         {design.designStyle === 'custom' && (
           <div>
-            <FormField
-              name="customPattern"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Custom Pattern Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Describe your custom pattern"
-                      value={design.customPattern}
-                      onChange={(e) => onChange('customPattern', e.target.value)}
-                      className="h-24"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <div className="space-y-2">
+              <Label>Custom Pattern Description</Label>
+              <Textarea 
+                placeholder="Describe your custom pattern"
+                value={design.customPattern}
+                onChange={(e) => onChange('customPattern', e.target.value)}
+                className="h-24"
+              />
+            </div>
           </div>
         )}
       </AccordionContent>
