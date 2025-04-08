@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/Layout/Header';
 import { DesignerForm } from '@/components/KitDesigner/DesignerForm';
@@ -77,6 +76,10 @@ const Index = () => {
   
   const handleDesignChange = (newDesign: KitDesign) => {
     setKitDesign({...kitDesign, ...newDesign});
+  };
+  
+  const handleDesignFieldChange = (field: keyof KitDesign, value: any) => {
+    setKitDesign(prev => ({...prev, [field]: value}));
   };
   
   const handleGenerateRequest = () => {
@@ -212,7 +215,7 @@ const Index = () => {
         currentKitTypes.splice(index, 1);
       }
     }
-    handleDesignChange({...kitDesign, kitType: currentKitTypes});
+    handleDesignFieldChange('kitType', currentKitTypes);
   };
   
   const MotionCard = motion(Card);
@@ -345,7 +348,7 @@ const Index = () => {
         <div className="container">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-muted-foreground">
-              © {new Date().getFullYear()} Profount.AI - Custom Sports Kit Design
+              © {new Date().getFullYear()} Profound.AI - Custom Sports Kit Design
             </p>
             
             <div className="flex gap-6 mt-4 md:mt-0">

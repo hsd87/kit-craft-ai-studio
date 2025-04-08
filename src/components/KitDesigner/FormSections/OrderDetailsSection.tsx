@@ -1,9 +1,9 @@
 
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { KitDesign } from '../types';
+import { complementingProducts } from '@/utils/sportMapping';
 
 interface OrderDetailsSectionProps {
   design: KitDesign;
@@ -12,78 +12,94 @@ interface OrderDetailsSectionProps {
 }
 
 export function OrderDetailsSection({ 
-  design, 
-  onKitTypeChange, 
-  onChange 
+  design,
+  onKitTypeChange,
+  onChange
 }: OrderDetailsSectionProps) {
+  const sport = design.sport || 'football';
+  const sportConfig = complementingProducts[sport] || {
+    baseKit: ['jersey'],
+    complement: [],
+    optional: []
+  };
+  
   return (
-    <AccordionItem value="order" className="border rounded-lg overflow-hidden">
-      <AccordionTrigger className="px-4 py-3 bg-muted/50 hover:bg-muted">
-        <h3 className="text-lg font-medium">Order Details</h3>
-      </AccordionTrigger>
-      <AccordionContent className="p-4">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Kit Type</Label>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="kit-jersey"
-                  checked={design.kitType.includes('jersey-only')}
-                  onCheckedChange={(checked) => 
-                    onKitTypeChange('jersey-only', checked === true)
-                  }
-                />
-                <Label htmlFor="kit-jersey">Jersey Only</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="kit-jersey-shorts"
-                  checked={design.kitType.includes('jersey-shorts')}
-                  onCheckedChange={(checked) => 
-                    onKitTypeChange('jersey-shorts', checked === true)
-                  }
-                />
-                <Label htmlFor="kit-jersey-shorts">Jersey + Shorts</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="kit-full"
-                  checked={design.kitType.includes('full-kit')}
-                  onCheckedChange={(checked) => 
-                    onKitTypeChange('full-kit', checked === true)
-                  }
-                />
-                <Label htmlFor="kit-full">Full Kit (Jersey + Shorts + Socks)</Label>
-              </div>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="deliveryRegion">Delivery Region/City</Label>
-            <Input
-              id="deliveryRegion"
-              value={design.deliveryRegion}
-              onChange={(e) => onChange('deliveryRegion', e.target.value)}
-              placeholder="Enter delivery region or city"
+    <div className="space-y-4">
+      <div>
+        <h4 className="font-medium mb-2">Kit Type</h4>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="kit-jersey" 
+              checked={design.kitType.includes('jersey-only')}
+              onCheckedChange={(checked) => onKitTypeChange('jersey-only', checked === true)}
             />
+            <Label htmlFor="kit-jersey">Jersey Only</Label>
           </div>
           
           <div className="flex items-center space-x-2">
-            <Checkbox
-              id="express-production"
-              checked={design.expressProd}
-              onCheckedChange={(checked) => 
-                onChange('expressProd', checked === true)
-              }
+            <Checkbox 
+              id="kit-full" 
+              checked={design.kitType.includes('full-kit')}
+              onCheckedChange={(checked) => onKitTypeChange('full-kit', checked === true)}
             />
-            <div>
-              <Label htmlFor="express-production">Express Production</Label>
-              <p className="text-xs text-muted-foreground">Additional fee applies for faster production</p>
-            </div>
+            <Label htmlFor="kit-full">Full Kit (includes {sportConfig.baseKit.join(', ')})</Label>
           </div>
+          
+          {sportConfig.complement.length > 0 && (
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="kit-complement" 
+                checked={design.kitType.includes('with-complement')}
+                onCheckedChange={(checked) => onKitTypeChange('with-complement', checked === true)}
+              />
+              <Label htmlFor="kit-complement">With {sportConfig.complement.join(', ')}</Label>
+            </div>
+          )}
+          
+          {sportConfig.optional.map((item) => (
+            <div key={item} className="flex items-center space-x-2">
+              <Checkbox 
+                id={`kit-${item}`} 
+                checked={design.kitType.includes(item)}
+                onCheckedChange={(checked) => onKitTypeChange(item, checked === true)}
+              />
+              <Label htmlFor={`kit-${item}`}>{item.replace('_', ' ')}</Label>
+            </div>
+          ))}
         </div>
-      </AccordionContent>
-    </AccordionItem>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="quantity">Quantity</Label>
+          <Input
+            id="quantity"
+            type="number"
+            min="1"
+            value={design.quantity}
+            onChange={(e) => onChange('quantity', parseInt(e.target.value) || 1)}
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="region">Delivery Region</Label>
+          <Input
+            id="region"
+            value={design.deliveryRegion}
+            onChange={(e) => onChange('deliveryRegion', e.target.value)}
+          />
+        </div>
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <Checkbox 
+          id="express"
+          checked={design.expressProd}
+          onCheckedChange={(checked) => onChange('expressProd', checked === true)}
+        />
+        <Label htmlFor="express">Express Production (+15%)</Label>
+      </div>
+    </div>
   );
 }
