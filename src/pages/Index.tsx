@@ -82,6 +82,21 @@ const Index = () => {
     setKitDesign(prev => ({...prev, [field]: value}));
   };
   
+  const handleKitTypeChange = (type: string, checked: boolean) => {
+    const currentKitTypes = [...kitDesign.kitType];
+    if (checked) {
+      if (!currentKitTypes.includes(type)) {
+        currentKitTypes.push(type);
+      }
+    } else {
+      const index = currentKitTypes.indexOf(type);
+      if (index !== -1) {
+        currentKitTypes.splice(index, 1);
+      }
+    }
+    handleDesignFieldChange('kitType', currentKitTypes);
+  };
+  
   const handleGenerateRequest = () => {
     setIsGenerating(true);
     
@@ -203,21 +218,6 @@ const Index = () => {
     setKitDesign(prev => ({ ...prev, quantity: newQuantity }));
   };
 
-  const handleKitTypeChange = (type: string, checked: boolean) => {
-    const currentKitTypes = [...kitDesign.kitType];
-    if (checked) {
-      if (!currentKitTypes.includes(type)) {
-        currentKitTypes.push(type);
-      }
-    } else {
-      const index = currentKitTypes.indexOf(type);
-      if (index !== -1) {
-        currentKitTypes.splice(index, 1);
-      }
-    }
-    handleDesignFieldChange('kitType', currentKitTypes);
-  };
-  
   const MotionCard = motion(Card);
   
   return (
@@ -305,7 +305,7 @@ const Index = () => {
                     <OrderDetailsSection
                       design={kitDesign}
                       onKitTypeChange={handleKitTypeChange}
-                      onChange={handleDesignChange}
+                      onChange={handleDesignFieldChange}
                     />
                   </div>
                   
